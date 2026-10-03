@@ -1,0 +1,17 @@
+spring:
+  config:
+    activate:
+      on-profile: prod
+  datasource:
+    url: ${DB_PROD_URL:jdbc:mysql://your-cloud-host:3306/event_system?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=true}
+    username: ${DB_PROD_USERNAME:your-cloud-username}
+    password: ${DB_PROD_PASSWORD:your-cloud-password}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+server:
+  forward-headers-strategy: framework
+
+logging:
+  level:
+    root: INFO
+    com.eems: INFO

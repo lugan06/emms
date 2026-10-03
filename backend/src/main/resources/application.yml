@@ -1,0 +1,35 @@
+spring:
+  application:
+    name: eems-backend
+  profiles:
+    default: local
+  jackson:
+    time-zone: Asia/Shanghai
+    date-format: yyyy-MM-dd HH:mm:ss
+    serialization:
+      write-dates-as-timestamps: false
+
+server:
+  port: 8080
+  servlet:
+    context-path: /
+
+mybatis-plus:
+  mapper-locations: classpath:/mapper/**/*.xml
+  type-aliases-package: com.eems.**.entity
+  configuration:
+    map-underscore-to-camel-case: true
+  global-config:
+    db-config:
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+eems:
+  jwt:
+    secret: ${JWT_SECRET:change-this-local-secret-key-to-a-long-random-value-please}
+    access-token-ttl: ${JWT_ACCESS_TOKEN_TTL:7200}
+  file:
+    storage-type: ${FILE_STORAGE_TYPE:local}
+    local-path: ${FILE_LOCAL_PATH:./data/uploads}
+    public-url-prefix: ${FILE_PUBLIC_URL_PREFIX:/uploads}
