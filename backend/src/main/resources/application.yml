@@ -9,6 +9,14 @@ spring:
     serialization:
       write-dates-as-timestamps: false
 
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+    version: OPENAPI_3_0
+  swagger-ui:
+    path: /swagger-ui.html
+    persist-authorization: true
+
 server:
   port: 8080
   servlet:
@@ -33,3 +41,10 @@ eems:
     storage-type: ${FILE_STORAGE_TYPE:local}
     local-path: ${FILE_LOCAL_PATH:./data/uploads}
     public-url-prefix: ${FILE_PUBLIC_URL_PREFIX:/uploads}
+  seed:
+    admin:
+      enabled: ${EEMS_SEED_ADMIN_ENABLED:false}
+      username: ${EEMS_SEED_ADMIN_USERNAME:}
+      password: ${EEMS_SEED_ADMIN_PASSWORD:}
+      nickname: ${EEMS_SEED_ADMIN_NICKNAME:系统管理员}
+      role-code: ${EEMS_SEED_ADMIN_ROLE_CODE:SUPER_ADMIN}

@@ -1,10 +1,20 @@
 package com.eems.common.api;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "统一接口响应体")
 public class Result<T> {
 
+    @Schema(description = "响应编码", example = "OK")
     private String code;
+
+    @Schema(description = "响应消息", example = "success")
     private String message;
+
+    @Schema(description = "业务数据")
     private T data;
+
+    @Schema(description = "链路追踪 ID", nullable = true)
     private String traceId;
 
     public Result() {
