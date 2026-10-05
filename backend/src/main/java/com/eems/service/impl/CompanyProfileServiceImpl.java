@@ -7,6 +7,7 @@ import com.eems.entity.CompanyProfile;
 import com.eems.mapper.CompanyProfileMapper;
 import com.eems.service.CompanyProfileService;
 import com.eems.vo.CompanyProfileVO;
+import com.eems.vo.PublicCompanyVO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +23,11 @@ public class CompanyProfileServiceImpl implements CompanyProfileService {
     @Override
     public CompanyProfileVO getDefault() {
         return CompanyProfileVO.from(findDefault());
+    }
+
+    @Override
+    public PublicCompanyVO getPublicDefault() {
+        return PublicCompanyVO.from(findDefault());
     }
 
     @Override

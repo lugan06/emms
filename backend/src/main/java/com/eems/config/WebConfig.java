@@ -1,7 +1,10 @@
 package com.eems.config;
 
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -9,7 +12,25 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.List;
 
 @Configuration
-public class WebConfig {
+public class WebConfig implements WebMvcConfigurer {
+
+    private final FileStorageProperties fileStorageProperties;
+
+    public WebConfig(ObjectProvider<FileStorageProperties> propertiesProvider) {
+        this.fileStorageProperties = propertiesProvider.getIfAvailable(FileStorageProperties::new);
+    }
+
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        String prefix = fileStorageProperties.getPublicUrlPrefix();
+        if (prefix == null || prefix.isBlank()) {
+            prefix = "/uploads";
+        }
+        String pattern = prefix.replaceAll("/+$", "") + "/**";
+        String location = java.nio.file.Paths.get(fileStorageProperties.getLocalPath())
+                .toAbsolutePath().normalize().toUri().toString();
+        registry.addResourceHandler(pattern).addResourceLocations(location);
+    }
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {

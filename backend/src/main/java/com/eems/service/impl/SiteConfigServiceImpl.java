@@ -10,6 +10,7 @@ import com.eems.mapper.SiteConfigMapper;
 import com.eems.mapper.ExhibitionMapper;
 import com.eems.service.SiteConfigService;
 import com.eems.vo.SiteConfigVO;
+import com.eems.vo.PublicSiteVO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,6 +28,11 @@ public class SiteConfigServiceImpl implements SiteConfigService {
     @Override
     public SiteConfigVO getDefault() {
         return SiteConfigVO.from(findDefault());
+    }
+
+    @Override
+    public PublicSiteVO getPublicDefault() {
+        return PublicSiteVO.from(findDefault());
     }
 
     @Override
