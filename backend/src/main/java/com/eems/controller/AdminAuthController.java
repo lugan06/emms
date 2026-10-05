@@ -2,10 +2,13 @@ package com.eems.controller;
 
 import com.eems.common.api.Result;
 import com.eems.dto.AdminLoginRequest;
+import com.eems.dto.AdminPasswordChangeRequest;
 import com.eems.service.AdminAuthService;
 import com.eems.vo.AdminLoginResponse;
+import com.eems.vo.AdminUserVO;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import org.springframework.security.core.Authentication;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -14,9 +17,12 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -50,6 +56,22 @@ public class AdminAuthController {
         return ResponseEntity.ok()
                 .header(HttpHeaders.AUTHORIZATION, loginResponse.getTokenType() + " " + loginResponse.getToken())
                 .body(Result.success(loginResponse));
+    }
+
+    @GetMapping("/me")
+    @Operation(summary = "获取当前管理员", description = "获取当前 JWT 对应的管理员基本信息")
+    @SecurityRequirement(name = "bearerAuth")
+    public Result<AdminUserVO> me(Authentication authentication) {
+        return Result.success(adminAuthService.currentUser(authentication.getName()));
+    }
+
+    @PutMapping("/password")
+    @Operation(summary = "修改管理员密码", description = "修改成功后前端应清除旧 token 并重新登录")
+    @SecurityRequirement(name = "bearerAuth")
+    public Result<Void> changePassword(@Valid @RequestBody AdminPasswordChangeRequest request,
+                                       Authentication authentication) {
+        adminAuthService.changePassword(authentication.getName(), request);
+        return Result.success();
     }
 
     private String resolveClientIp(HttpServletRequest request) {

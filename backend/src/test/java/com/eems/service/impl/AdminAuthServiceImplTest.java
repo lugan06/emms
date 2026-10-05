@@ -2,6 +2,7 @@ package com.eems.service.impl;
 
 import com.eems.common.exception.BusinessException;
 import com.eems.dto.AdminLoginRequest;
+import com.eems.dto.AdminPasswordChangeRequest;
 import com.eems.entity.AdminUser;
 import com.eems.mapper.AdminUserMapper;
 import com.eems.security.JwtProperties;
@@ -96,6 +97,44 @@ class AdminAuthServiceImplTest {
                 () -> adminAuthService.login(loginRequest("admin", "wrong-password"), "127.0.0.1"));
 
         assertEquals("INVALID_CREDENTIALS", exception.getCode());
+        verify(adminUserMapper, never()).updateById(any(AdminUser.class));
+    }
+
+    @Test
+    void currentUserShouldReturnSafeProfile() {
+        AdminUser adminUser = enabledAdmin();
+        when(adminUserMapper.selectOne(any())).thenReturn(adminUser);
+
+        var result = adminAuthService.currentUser("admin");
+
+        assertEquals("admin", result.getUsername());
+        assertEquals("SUPER_ADMIN", result.getRoleCode());
+    }
+
+    @Test
+    void changePasswordShouldVerifyAndHashNewPassword() {
+        AdminUser adminUser = enabledAdmin();
+        when(adminUserMapper.selectOne(any())).thenReturn(adminUser);
+        when(passwordEncoder.matches("old-password", "bcrypt-hash")).thenReturn(true);
+        when(passwordEncoder.encode("new-password")).thenReturn("new-bcrypt-hash");
+
+        adminAuthService.changePassword("admin", new AdminPasswordChangeRequest("old-password", "new-password"));
+
+        assertEquals("new-bcrypt-hash", adminUser.getPasswordHash());
+        verify(adminUserMapper).updateById(adminUser);
+    }
+
+    @Test
+    void changePasswordShouldRejectWrongOldPassword() {
+        AdminUser adminUser = enabledAdmin();
+        when(adminUserMapper.selectOne(any())).thenReturn(adminUser);
+        when(passwordEncoder.matches("wrong-password", "bcrypt-hash")).thenReturn(false);
+
+        BusinessException exception = assertThrows(BusinessException.class, () ->
+                adminAuthService.changePassword("admin", new AdminPasswordChangeRequest("wrong-password", "new-password")));
+
+        assertEquals("INVALID_PASSWORD", exception.getCode());
+        verify(passwordEncoder, never()).encode(any());
         verify(adminUserMapper, never()).updateById(any(AdminUser.class));
     }
 

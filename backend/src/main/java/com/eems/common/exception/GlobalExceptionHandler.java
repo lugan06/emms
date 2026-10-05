@@ -3,6 +3,7 @@ package com.eems.common.exception;
 import com.eems.common.api.Result;
 import com.eems.util.TraceIdUtil;
 import jakarta.validation.ConstraintViolationException;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -21,6 +22,12 @@ public class GlobalExceptionHandler {
         String traceId = TraceIdUtil.currentOrCreate();
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(Result.failure(exception.getCode(), exception.getMessage(), traceId));
+    }
+
+    @ExceptionHandler(AuthorizationDeniedException.class)
+    public ResponseEntity<Result<Void>> handleAuthorizationDenied() {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(Result.failure("FORBIDDEN", "没有权限", TraceIdUtil.currentOrCreate()));
     }
 
     @ExceptionHandler({MethodArgumentNotValidException.class, BindException.class})

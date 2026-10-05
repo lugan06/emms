@@ -3,6 +3,7 @@ package com.eems.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.eems.common.exception.BusinessException;
 import com.eems.dto.AdminLoginRequest;
+import com.eems.dto.AdminPasswordChangeRequest;
 import com.eems.entity.AdminUser;
 import com.eems.mapper.AdminUserMapper;
 import com.eems.security.JwtProperties;
@@ -60,5 +61,37 @@ public class AdminAuthServiceImpl implements AdminAuthService {
                 adminUser.getAvatarUrl(),
                 adminUser.getRoleCode());
         return new AdminLoginResponse(token, "Bearer", jwtProperties.getAccessTokenTtl(), user);
+    }
+
+    @Override
+    public AdminUserVO currentUser(String username) {
+        AdminUser adminUser = findEnabledUser(username);
+        return toUserVO(adminUser);
+    }
+
+    @Override
+    @Transactional
+    public void changePassword(String username, AdminPasswordChangeRequest request) {
+        AdminUser adminUser = findEnabledUser(username);
+        if (!passwordEncoder.matches(request.oldPassword(), adminUser.getPasswordHash())) {
+            throw new BusinessException("INVALID_PASSWORD", "原密码错误");
+        }
+        adminUser.setPasswordHash(passwordEncoder.encode(request.newPassword()));
+        adminUserMapper.updateById(adminUser);
+    }
+
+    private AdminUser findEnabledUser(String username) {
+        AdminUser adminUser = adminUserMapper.selectOne(new LambdaQueryWrapper<AdminUser>()
+                .eq(AdminUser::getUsername, username)
+                .eq(AdminUser::getStatus, ENABLED));
+        if (adminUser == null) {
+            throw new BusinessException("ADMIN_NOT_FOUND", "管理员不存在或已禁用");
+        }
+        return adminUser;
+    }
+
+    private AdminUserVO toUserVO(AdminUser adminUser) {
+        return new AdminUserVO(adminUser.getId(), adminUser.getUsername(), adminUser.getNickname(),
+                adminUser.getAvatarUrl(), adminUser.getRoleCode());
     }
 }
