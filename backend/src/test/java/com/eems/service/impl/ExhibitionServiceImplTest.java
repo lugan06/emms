@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.eems.common.exception.BusinessException;
 import com.eems.dto.ExhibitionPageQuery;
 import com.eems.dto.ExhibitionSaveRequest;
+import com.eems.dto.PublicExhibitionPageQuery;
 import com.eems.entity.Exhibition;
 import com.eems.entity.SiteConfig;
 import com.eems.mapper.AdminUserMapper;
@@ -195,6 +196,34 @@ class ExhibitionServiceImplTest {
 
         assertEquals("涂料博览会", service.page(query).getRecords().get(0).title());
         verify(mapper).selectPage(any(), any());
+    }
+
+    @Test
+    void publicPageShouldMapCurrentExhibition() {
+        Exhibition value = exhibition(10L, "PUBLISHED");
+        value.setTitle("公开展会");
+        Page<Exhibition> page = new Page<>(1, 20);
+        page.setRecords(List.of(value));
+        page.setTotal(1);
+        SiteConfig config = new SiteConfig();
+        config.setConfigCode("default");
+        config.setCurrentExhibitionId(10L);
+        when(mapper.selectPage(any(), any())).thenReturn(page);
+        when(siteConfigMapper.selectOne(any())).thenReturn(config);
+
+        PublicExhibitionPageQuery query = new PublicExhibitionPageQuery();
+
+        assertEquals(true, service.publicPage(query).getRecords().get(0).isCurrent());
+    }
+
+    @Test
+    void publicDetailShouldRejectUnpublishedExhibition() {
+        when(mapper.selectOne(any())).thenReturn(null);
+
+        BusinessException exception = assertThrows(BusinessException.class,
+                () -> service.publicGet(11L));
+
+        assertEquals("PUBLIC_EXHIBITION_NOT_FOUND", exception.getCode());
     }
 
     private ExhibitionSaveRequest request() {

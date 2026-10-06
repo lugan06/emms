@@ -8,6 +8,7 @@ import com.eems.common.api.PageResult;
 import com.eems.common.exception.BusinessException;
 import com.eems.dto.ExhibitionPageQuery;
 import com.eems.dto.ExhibitionSaveRequest;
+import com.eems.dto.PublicExhibitionPageQuery;
 import com.eems.entity.Exhibition;
 import com.eems.entity.SiteConfig;
 import com.eems.mapper.ExhibitionMapper;
@@ -16,6 +17,7 @@ import com.eems.mapper.SiteConfigMapper;
 import com.eems.service.ExhibitionService;
 import com.eems.service.OperationLogService;
 import com.eems.vo.ExhibitionVO;
+import com.eems.vo.PublicExhibitionVO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -66,8 +68,42 @@ public class ExhibitionServiceImpl implements ExhibitionService {
     }
 
     @Override
+    public PageResult<PublicExhibitionVO> publicPage(PublicExhibitionPageQuery query) {
+        LocalDateTime now = LocalDateTime.now();
+        Page<Exhibition> page = new Page<>(query.getPage(), query.getPageSize());
+        LambdaQueryWrapper<Exhibition> wrapper = publicWrapper(now)
+                .orderByAsc(Exhibition::getStartAt).orderByAsc(Exhibition::getHomeSort)
+                .orderByDesc(Exhibition::getId);
+        if (StringUtils.hasText(query.getKeyword())) {
+            String keyword = query.getKeyword().trim();
+            wrapper.and(w -> w.like(Exhibition::getTitle, keyword)
+                    .or().like(Exhibition::getExhibitionCode, keyword)
+                    .or().like(Exhibition::getVenue, keyword));
+        }
+        if (query.getYear() != null) {
+            wrapper.eq(Exhibition::getYear, query.getYear());
+        }
+        Page<Exhibition> result = mapper.selectPage(page, wrapper);
+        Long currentId = currentExhibitionId();
+        return new PageResult<>(result.getRecords().stream()
+                        .map(value -> PublicExhibitionVO.from(value, value.getId().equals(currentId)))
+                        .toList(),
+                result.getTotal(), query.getPage(), query.getPageSize());
+    }
+
+    @Override
     public ExhibitionVO get(Long id) {
         return ExhibitionVO.from(find(id));
+    }
+
+    @Override
+    public PublicExhibitionVO publicGet(Long id) {
+        Exhibition value = mapper.selectOne(publicWrapper(LocalDateTime.now())
+                .eq(Exhibition::getId, id));
+        if (value == null) {
+            throw new BusinessException("PUBLIC_EXHIBITION_NOT_FOUND", "公开展会不存在");
+        }
+        return PublicExhibitionVO.from(value, value.getId().equals(currentExhibitionId()));
     }
 
     @Override
@@ -192,6 +228,19 @@ public class ExhibitionServiceImpl implements ExhibitionService {
             throw new BusinessException("EXHIBITION_NOT_FOUND", "展会不存在");
         }
         return value;
+    }
+
+    private LambdaQueryWrapper<Exhibition> publicWrapper(LocalDateTime now) {
+        return new LambdaQueryWrapper<Exhibition>()
+                .eq(Exhibition::getStatus, PUBLISHED)
+                .and(w -> w.isNull(Exhibition::getPublishedAt)
+                        .or().le(Exhibition::getPublishedAt, now));
+    }
+
+    private Long currentExhibitionId() {
+        SiteConfig config = siteConfigMapper.selectOne(new LambdaQueryWrapper<SiteConfig>()
+                .eq(SiteConfig::getConfigCode, "default"));
+        return config == null ? null : config.getCurrentExhibitionId();
     }
 
     private void validateTime(ExhibitionSaveRequest request) {
