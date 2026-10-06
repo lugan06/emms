@@ -3,6 +3,7 @@ package com.eems.common.exception;
 import com.eems.common.api.Result;
 import com.eems.util.TraceIdUtil;
 import jakarta.validation.ConstraintViolationException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -63,6 +64,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     public ResponseEntity<Result<Void>> handleMaxUploadSize() {
         return badRequest("FILE_TOO_LARGE", "上传文件超过大小限制");
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<Result<Void>> handleDataIntegrityViolation() {
+        return badRequest("DATA_INTEGRITY_ERROR", "请求数据不符合数据库约束");
     }
 
     @ExceptionHandler(Exception.class)
