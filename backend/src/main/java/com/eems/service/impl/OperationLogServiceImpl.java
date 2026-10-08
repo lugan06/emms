@@ -20,12 +20,17 @@ public class OperationLogServiceImpl implements OperationLogService {
 
     @Override
     public void success(String username, String operation, String requestUrl, String params) {
+        success("EXHIBITION", username, operation, requestUrl, params);
+    }
+
+    @Override
+    public void success(String module, String username, String operation, String requestUrl, String params) {
         AdminUser user = adminUserMapper.selectOne(new LambdaQueryWrapper<AdminUser>()
                 .eq(AdminUser::getUsername, username));
         OperationLog log = new OperationLog();
         log.setAdminUserId(user == null ? null : user.getId());
         log.setUsername(username);
-        log.setModule("EXHIBITION");
+        log.setModule(module);
         log.setOperation(operation);
         log.setRequestMethod("POST");
         log.setRequestUrl(requestUrl);
