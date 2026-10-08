@@ -36,6 +36,11 @@ public class SiteConfigServiceImpl implements SiteConfigService {
     }
 
     @Override
+    public Long getCurrentExhibitionId() {
+        return findDefault().getCurrentExhibitionId();
+    }
+
+    @Override
     @Transactional
     public SiteConfigVO updateDefault(SiteConfigUpdateRequest request) {
         validateCurrentExhibition(request.currentExhibitionId());

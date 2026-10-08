@@ -7,5 +7,6 @@ import com.eems.vo.SiteConfigVO;
 public interface SiteConfigService {
     SiteConfigVO getDefault();
     PublicSiteVO getPublicDefault();
+    Long getCurrentExhibitionId();
     SiteConfigVO updateDefault(SiteConfigUpdateRequest request);
 }
