@@ -13,7 +13,15 @@ public interface GuestbookService {
 
     GuestbookVO markRead(Long id);
 
+    default GuestbookVO markRead(Long id, String username) {
+        return markRead(id);
+    }
+
     GuestbookVO reply(Long id, GuestbookReplyRequest request, String username);
 
     GuestbookVO close(Long id);
+
+    default GuestbookVO close(Long id, String username) {
+        return close(id);
+    }
 }

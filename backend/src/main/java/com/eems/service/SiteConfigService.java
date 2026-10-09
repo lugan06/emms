@@ -9,4 +9,8 @@ public interface SiteConfigService {
     PublicSiteVO getPublicDefault();
     Long getCurrentExhibitionId();
     SiteConfigVO updateDefault(SiteConfigUpdateRequest request);
+
+    default SiteConfigVO updateDefault(SiteConfigUpdateRequest request, String username) {
+        return updateDefault(request);
+    }
 }

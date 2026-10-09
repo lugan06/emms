@@ -41,7 +41,7 @@ class AdminConfigurationControllerTest {
         when(siteConfigService.getDefault()).thenReturn(new SiteConfigVO(
                 1L, "default", null, "EEMS", null, null, null, null,
                 null, null, null, null, null));
-        when(siteConfigService.updateDefault(any())).thenReturn(new SiteConfigVO(
+        when(siteConfigService.updateDefault(any(), any())).thenReturn(new SiteConfigVO(
                 1L, "default", null, "Updated EEMS", null, null, null, null,
                 null, null, null, null, null));
 
@@ -57,7 +57,7 @@ class AdminConfigurationControllerTest {
 
     @Test
     void siteUpdateShouldReturnClientErrorForMissingExhibition() throws Exception {
-        when(siteConfigService.updateDefault(any()))
+        when(siteConfigService.updateDefault(any(), any()))
                 .thenThrow(new com.eems.common.exception.BusinessException(
                         "EXHIBITION_NOT_FOUND", "当前主展会不存在或已删除"));
 

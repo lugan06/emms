@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -35,7 +36,9 @@ public class AdminSiteController {
     @PutMapping
     @PreAuthorize("hasRole('SUPER_ADMIN')")
     @Operation(summary = "更新站点配置")
-    public Result<SiteConfigVO> update(@Valid @RequestBody SiteConfigUpdateRequest request) {
-        return Result.success(service.updateDefault(request));
+    public Result<SiteConfigVO> update(@Valid @RequestBody SiteConfigUpdateRequest request,
+                                       Authentication authentication) {
+        return Result.success(service.updateDefault(request,
+                authentication == null ? null : authentication.getName()));
     }
 }

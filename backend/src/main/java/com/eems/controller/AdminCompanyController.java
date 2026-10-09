@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -35,7 +36,9 @@ public class AdminCompanyController {
     @PutMapping
     @PreAuthorize("hasRole('SUPER_ADMIN')")
     @Operation(summary = "更新公司信息")
-    public Result<CompanyProfileVO> update(@Valid @RequestBody CompanyProfileUpdateRequest request) {
-        return Result.success(service.updateDefault(request));
+    public Result<CompanyProfileVO> update(@Valid @RequestBody CompanyProfileUpdateRequest request,
+                                           Authentication authentication) {
+        return Result.success(service.updateDefault(request,
+                authentication == null ? null : authentication.getName()));
     }
 }

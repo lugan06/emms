@@ -50,8 +50,8 @@ public class FileAssetController {
 
     @DeleteMapping("/{id}")
     @Operation(summary = "逻辑删除文件资源", description = "只删除数据库可见性，不直接删除物理文件")
-    public Result<Void> delete(@PathVariable Long id) {
-        fileAssetService.delete(id);
+    public Result<Void> delete(@PathVariable Long id, Authentication authentication) {
+        fileAssetService.delete(id, authentication == null ? null : authentication.getName());
         return Result.success();
     }
 }

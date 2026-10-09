@@ -11,4 +11,8 @@ public interface FileAssetService {
     PageResult<FileAssetVO> page(FileAssetPageQuery query);
 
     void delete(Long id);
+
+    default void delete(Long id, String username) {
+        delete(id);
+    }
 }

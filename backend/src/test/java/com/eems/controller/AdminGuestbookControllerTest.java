@@ -72,15 +72,15 @@ class AdminGuestbookControllerTest {
     @Test
     @WithMockUser(username = "admin")
     void readAndCloseShouldCallService() throws Exception {
-        when(guestbookService.markRead(2L)).thenReturn((GuestbookVO) null);
-        when(guestbookService.close(3L)).thenReturn((GuestbookVO) null);
+        when(guestbookService.markRead(2L, "admin")).thenReturn((GuestbookVO) null);
+        when(guestbookService.close(3L, "admin")).thenReturn((GuestbookVO) null);
 
         mockMvc.perform(post("/api/admin/guestbooks/2/read"))
                 .andExpect(status().isOk());
         mockMvc.perform(post("/api/admin/guestbooks/3/close"))
                 .andExpect(status().isOk());
 
-        verify(guestbookService).markRead(2L);
-        verify(guestbookService).close(3L);
+        verify(guestbookService).markRead(2L, "admin");
+        verify(guestbookService).close(3L, "admin");
     }
 }

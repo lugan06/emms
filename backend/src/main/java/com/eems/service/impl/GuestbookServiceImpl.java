@@ -12,6 +12,7 @@ import com.eems.entity.Guestbook;
 import com.eems.mapper.AdminUserMapper;
 import com.eems.mapper.GuestbookMapper;
 import com.eems.service.GuestbookService;
+import com.eems.service.OperationLogService;
 import com.eems.vo.GuestbookVO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,11 +34,19 @@ public class GuestbookServiceImpl implements GuestbookService {
 
     private final GuestbookMapper guestbookMapper;
     private final AdminUserMapper adminUserMapper;
+    private final OperationLogService operationLogService;
     private final ConcurrentHashMap<String, RateWindow> rateWindows = new ConcurrentHashMap<>();
 
     public GuestbookServiceImpl(GuestbookMapper guestbookMapper, AdminUserMapper adminUserMapper) {
+        this(guestbookMapper, adminUserMapper, null);
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public GuestbookServiceImpl(GuestbookMapper guestbookMapper, AdminUserMapper adminUserMapper,
+                                OperationLogService operationLogService) {
         this.guestbookMapper = guestbookMapper;
         this.adminUserMapper = adminUserMapper;
+        this.operationLogService = operationLogService;
     }
 
     @Override
@@ -74,12 +83,20 @@ public class GuestbookServiceImpl implements GuestbookService {
     @Override
     @Transactional
     public GuestbookVO markRead(Long id) {
+        return markRead(id, null);
+    }
+
+    @Override
+    @Transactional
+    public GuestbookVO markRead(Long id, String username) {
         Guestbook guestbook = find(id);
         if (!UNREAD.equals(guestbook.getStatus())) {
             throw new BusinessException("GUESTBOOK_INVALID_STATUS", "只有未读留言可以标记为已读");
         }
         guestbook.setStatus(READ);
         guestbookMapper.updateById(guestbook);
+        AuditSupport.success(operationLogService, "GUESTBOOK", username, "标记留言已读", "POST",
+                "/api/admin/guestbooks/" + id + "/read", "{\"id\":" + id + "}");
         return GuestbookVO.from(guestbook);
     }
 
@@ -101,18 +118,28 @@ public class GuestbookServiceImpl implements GuestbookService {
         guestbook.setRepliedAt(LocalDateTime.now());
         guestbook.setStatus(REPLIED);
         guestbookMapper.updateById(guestbook);
+        AuditSupport.success(operationLogService, "GUESTBOOK", username, "回复留言", "POST",
+                "/api/admin/guestbooks/" + id + "/reply", "{\"id\":" + id + "}");
         return GuestbookVO.from(guestbook);
     }
 
     @Override
     @Transactional
     public GuestbookVO close(Long id) {
+        return close(id, null);
+    }
+
+    @Override
+    @Transactional
+    public GuestbookVO close(Long id, String username) {
         Guestbook guestbook = find(id);
         if (CLOSED.equals(guestbook.getStatus())) {
             throw new BusinessException("GUESTBOOK_ALREADY_CLOSED", "留言已经关闭");
         }
         guestbook.setStatus(CLOSED);
         guestbookMapper.updateById(guestbook);
+        AuditSupport.success(operationLogService, "GUESTBOOK", username, "关闭留言", "POST",
+                "/api/admin/guestbooks/" + id + "/close", "{\"id\":" + id + "}");
         return GuestbookVO.from(guestbook);
     }
 

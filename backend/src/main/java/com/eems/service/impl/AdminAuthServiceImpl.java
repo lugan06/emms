@@ -9,11 +9,13 @@ import com.eems.mapper.AdminUserMapper;
 import com.eems.security.JwtProperties;
 import com.eems.security.JwtTokenUtil;
 import com.eems.service.AdminAuthService;
+import com.eems.service.OperationLogService;
 import com.eems.vo.AdminLoginResponse;
 import com.eems.vo.AdminUserVO;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.LocalDateTime;
 
@@ -26,15 +28,26 @@ public class AdminAuthServiceImpl implements AdminAuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenUtil jwtTokenUtil;
     private final JwtProperties jwtProperties;
+    private final OperationLogService operationLogService;
 
     public AdminAuthServiceImpl(AdminUserMapper adminUserMapper,
                                 PasswordEncoder passwordEncoder,
                                 JwtTokenUtil jwtTokenUtil,
                                 JwtProperties jwtProperties) {
+        this(adminUserMapper, passwordEncoder, jwtTokenUtil, jwtProperties, null);
+    }
+
+    @Autowired
+    public AdminAuthServiceImpl(AdminUserMapper adminUserMapper,
+                                PasswordEncoder passwordEncoder,
+                                JwtTokenUtil jwtTokenUtil,
+                                JwtProperties jwtProperties,
+                                OperationLogService operationLogService) {
         this.adminUserMapper = adminUserMapper;
         this.passwordEncoder = passwordEncoder;
         this.jwtTokenUtil = jwtTokenUtil;
         this.jwtProperties = jwtProperties;
+        this.operationLogService = operationLogService;
     }
 
     @Override
@@ -45,6 +58,10 @@ public class AdminAuthServiceImpl implements AdminAuthService {
                 .eq(AdminUser::getStatus, ENABLED));
 
         if (adminUser == null || !passwordEncoder.matches(request.getPassword(), adminUser.getPasswordHash())) {
+            if (operationLogService != null) {
+                operationLogService.failure("AUTH", request.getUsername(), "登录", "POST", "/api/admin/login",
+                        clientIp, "{\"username\":\"" + request.getUsername() + "\"}", "账号或密码错误");
+            }
             throw new BusinessException("INVALID_CREDENTIALS", "账号或密码错误");
         }
 
@@ -60,6 +77,10 @@ public class AdminAuthServiceImpl implements AdminAuthService {
                 adminUser.getNickname(),
                 adminUser.getAvatarUrl(),
                 adminUser.getRoleCode());
+        if (operationLogService != null) {
+            operationLogService.success("AUTH", adminUser.getUsername(), "登录", "POST", "/api/admin/login",
+                    clientIp, "{\"username\":\"" + adminUser.getUsername() + "\"}");
+        }
         return new AdminLoginResponse(token, "Bearer", jwtProperties.getAccessTokenTtl(), user);
     }
 
@@ -74,10 +95,18 @@ public class AdminAuthServiceImpl implements AdminAuthService {
     public void changePassword(String username, AdminPasswordChangeRequest request) {
         AdminUser adminUser = findEnabledUser(username);
         if (!passwordEncoder.matches(request.oldPassword(), adminUser.getPasswordHash())) {
+            if (operationLogService != null) {
+                operationLogService.failure("AUTH", username, "修改密码", "PUT", "/api/admin/password",
+                        null, "{}", "原密码错误");
+            }
             throw new BusinessException("INVALID_PASSWORD", "原密码错误");
         }
         adminUser.setPasswordHash(passwordEncoder.encode(request.newPassword()));
         adminUserMapper.updateById(adminUser);
+        if (operationLogService != null) {
+            operationLogService.success("AUTH", username, "修改密码", "PUT", "/api/admin/password",
+                    null, "{}");
+        }
     }
 
     private AdminUser findEnabledUser(String username) {

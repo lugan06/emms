@@ -40,8 +40,10 @@ public class AdminGuestbookController {
     @PostMapping("/{id}/read")
     @Operation(summary = "标记留言为已读")
     public Result<GuestbookVO> markRead(
-            @Parameter(description = "留言 ID", example = "1") @PathVariable Long id) {
-        return Result.success(service.markRead(id));
+            @Parameter(description = "留言 ID", example = "1") @PathVariable Long id,
+            Authentication authentication) {
+        return Result.success(service.markRead(id,
+                authentication == null ? null : authentication.getName()));
     }
 
     @PostMapping("/{id}/reply")
@@ -56,7 +58,9 @@ public class AdminGuestbookController {
     @PostMapping("/{id}/close")
     @Operation(summary = "关闭在线留言")
     public Result<GuestbookVO> close(
-            @Parameter(description = "留言 ID", example = "1") @PathVariable Long id) {
-        return Result.success(service.close(id));
+            @Parameter(description = "留言 ID", example = "1") @PathVariable Long id,
+            Authentication authentication) {
+        return Result.success(service.close(id,
+                authentication == null ? null : authentication.getName()));
     }
 }

@@ -11,9 +11,11 @@ import com.eems.mapper.AdminUserMapper;
 import com.eems.mapper.FileAssetMapper;
 import com.eems.service.FileAssetService;
 import com.eems.service.FileStorageService;
+import com.eems.service.OperationLogService;
 import com.eems.vo.FileAssetVO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -24,12 +26,20 @@ public class FileAssetServiceImpl implements FileAssetService {
     private final FileAssetMapper fileAssetMapper;
     private final AdminUserMapper adminUserMapper;
     private final FileStorageService fileStorageService;
+    private final OperationLogService operationLogService;
 
     public FileAssetServiceImpl(FileAssetMapper fileAssetMapper, AdminUserMapper adminUserMapper,
                                 FileStorageService fileStorageService) {
+        this(fileAssetMapper, adminUserMapper, fileStorageService, null);
+    }
+
+    @Autowired
+    public FileAssetServiceImpl(FileAssetMapper fileAssetMapper, AdminUserMapper adminUserMapper,
+                                FileStorageService fileStorageService, OperationLogService operationLogService) {
         this.fileAssetMapper = fileAssetMapper;
         this.adminUserMapper = adminUserMapper;
         this.fileStorageService = fileStorageService;
+        this.operationLogService = operationLogService;
     }
 
     @Override
@@ -55,6 +65,8 @@ public class FileAssetServiceImpl implements FileAssetService {
             if (fileAssetMapper.insert(asset) != 1) {
                 throw new BusinessException("FILE_METADATA_SAVE_FAILED", "文件元数据保存失败");
             }
+            AuditSupport.success(operationLogService, "FILE_ASSET", username, "上传文件", "POST",
+                    "/api/admin/files", "{\"id\":" + asset.getId() + "}");
             return FileAssetVO.from(asset);
         } catch (RuntimeException exception) {
             fileStorageService.remove(storedFile);
@@ -78,6 +90,12 @@ public class FileAssetServiceImpl implements FileAssetService {
     @Override
     @Transactional
     public void delete(Long id) {
+        delete(id, null);
+    }
+
+    @Override
+    @Transactional
+    public void delete(Long id, String username) {
         FileAsset asset = fileAssetMapper.selectById(id);
         if (asset == null) {
             throw new BusinessException("FILE_NOT_FOUND", "文件资源不存在");
@@ -85,5 +103,7 @@ public class FileAssetServiceImpl implements FileAssetService {
         if (fileAssetMapper.deleteById(id) != 1) {
             throw new BusinessException("FILE_DELETE_FAILED", "文件删除失败");
         }
+        AuditSupport.success(operationLogService, "FILE_ASSET", username, "删除文件", "DELETE",
+                "/api/admin/files/" + id, "{\"id\":" + id + "}");
     }
 }

@@ -8,4 +8,8 @@ public interface CompanyProfileService {
     CompanyProfileVO getDefault();
     PublicCompanyVO getPublicDefault();
     CompanyProfileVO updateDefault(CompanyProfileUpdateRequest request);
+
+    default CompanyProfileVO updateDefault(CompanyProfileUpdateRequest request, String username) {
+        return updateDefault(request);
+    }
 }

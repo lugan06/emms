@@ -6,18 +6,27 @@ import com.eems.dto.CompanyProfileUpdateRequest;
 import com.eems.entity.CompanyProfile;
 import com.eems.mapper.CompanyProfileMapper;
 import com.eems.service.CompanyProfileService;
+import com.eems.service.OperationLogService;
 import com.eems.vo.CompanyProfileVO;
 import com.eems.vo.PublicCompanyVO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @Service
 public class CompanyProfileServiceImpl implements CompanyProfileService {
     private static final String DEFAULT_CODE = "default";
     private final CompanyProfileMapper mapper;
+    private final OperationLogService operationLogService;
 
     public CompanyProfileServiceImpl(CompanyProfileMapper mapper) {
+        this(mapper, null);
+    }
+
+    @Autowired
+    public CompanyProfileServiceImpl(CompanyProfileMapper mapper, OperationLogService operationLogService) {
         this.mapper = mapper;
+        this.operationLogService = operationLogService;
     }
 
     @Override
@@ -33,6 +42,12 @@ public class CompanyProfileServiceImpl implements CompanyProfileService {
     @Override
     @Transactional
     public CompanyProfileVO updateDefault(CompanyProfileUpdateRequest request) {
+        return updateDefault(request, null);
+    }
+
+    @Override
+    @Transactional
+    public CompanyProfileVO updateDefault(CompanyProfileUpdateRequest request, String username) {
         CompanyProfile value = findDefault();
         value.setCompanyName(request.companyName());
         value.setAddress(request.address());
@@ -47,6 +62,8 @@ public class CompanyProfileServiceImpl implements CompanyProfileService {
         value.setBusinessLicenseNo(request.businessLicenseNo());
         value.setOtherInfo(request.otherInfo());
         mapper.updateById(value);
+        AuditSupport.success(operationLogService, "COMPANY_PROFILE", username, "修改公司信息", "PUT",
+                "/api/admin/company", "{\"profileCode\":\"default\"}");
         return CompanyProfileVO.from(value);
     }
 
