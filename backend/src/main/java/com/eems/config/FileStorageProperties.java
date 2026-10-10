@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "eems.file")
 public class FileStorageProperties {
     private String storageType = "local";
-    private String localPath = "./data/uploads";
+    private String localPath;
     private String publicUrlPrefix = "/uploads";
     private long maxFileSizeBytes = 10 * 1024 * 1024;
 

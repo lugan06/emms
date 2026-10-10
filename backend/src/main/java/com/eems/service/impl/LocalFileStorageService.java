@@ -39,7 +39,15 @@ public class LocalFileStorageService implements FileStorageService {
 
     public LocalFileStorageService(FileStorageProperties properties) {
         this.properties = properties;
+        if (properties.getLocalPath() == null || properties.getLocalPath().isBlank()) {
+            throw new IllegalStateException("eems.file.local-path must be configured");
+        }
         this.root = Paths.get(properties.getLocalPath()).toAbsolutePath().normalize();
+        try {
+            Files.createDirectories(root);
+        } catch (IOException exception) {
+            throw new IllegalStateException("无法创建文件存储目录: " + root, exception);
+        }
     }
 
     @Override

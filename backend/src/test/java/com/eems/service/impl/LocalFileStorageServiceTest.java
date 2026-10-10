@@ -37,6 +37,17 @@ class LocalFileStorageServiceTest {
     }
 
     @Test
+    void shouldCreateConfiguredDirectoryWhenItDoesNotExist() throws Exception {
+        Path configuredPath = tempDir.resolve("nested").resolve("uploads");
+        FileStorageProperties properties = properties(1024);
+        properties.setLocalPath(configuredPath.toString());
+
+        new LocalFileStorageService(properties);
+
+        assertTrue(Files.isDirectory(configuredPath));
+    }
+
+    @Test
     void shouldRejectExecutableAndMimeMismatch() {
         LocalFileStorageService service = new LocalFileStorageService(properties(1024));
 

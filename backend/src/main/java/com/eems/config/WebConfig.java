@@ -22,6 +22,9 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        if (fileStorageProperties.getLocalPath() == null || fileStorageProperties.getLocalPath().isBlank()) {
+            return;
+        }
         String prefix = fileStorageProperties.getPublicUrlPrefix();
         if (prefix == null || prefix.isBlank()) {
             prefix = "/uploads";
