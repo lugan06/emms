@@ -11,18 +11,24 @@
           <template #dropdown>
             <el-dropdown-menu>
               <el-dropdown-item v-for="child in category.children" :key="child.id">
-                <a v-if="child.linkUrl" :href="child.linkUrl">{{ child.name }}</a>
-                <RouterLink v-else-if="getInternalPath(child)" :to="getInternalPath(child)!">{{ child.name }}</RouterLink>
-                <span v-else>{{ child.name }}</span>
+                <RouterLink v-if="getInternalPath(child)" :to="getInternalPath(child)!">{{ child.name }}</RouterLink>
+                <a v-else-if="isExternalLink(child.linkUrl)" :href="child.linkUrl">{{ child.name }}</a>
+                <button v-else type="button" class="nav-link" @click="handleUnavailableLink">
+                  {{ child.name }}
+                </button>
               </el-dropdown-item>
             </el-dropdown-menu>
           </template>
         </el-dropdown>
-        <a v-else-if="category.linkUrl" :href="category.linkUrl" class="nav-item">{{ category.name }}</a>
         <RouterLink v-else-if="getInternalPath(category)" :to="getInternalPath(category)!" class="nav-item">
           {{ category.name }}
         </RouterLink>
-        <span v-else class="nav-item">{{ category.name }}</span>
+        <a v-else-if="isExternalLink(category.linkUrl)" :href="category.linkUrl" class="nav-item">
+          {{ category.name }}
+        </a>
+        <button v-else type="button" class="nav-item nav-link" @click="handleUnavailableLink">
+          {{ category.name }}
+        </button>
       </template>
     </template>
   </nav>
@@ -31,6 +37,7 @@
 <script setup lang="ts">
 import { RouterLink } from 'vue-router'
 import { ArrowDown } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
 
 import type { PublicCategory } from '@/types/public'
 
@@ -40,11 +47,21 @@ defineProps<{
 }>()
 
 function getInternalPath(category: PublicCategory): string | null {
-  const key = (category.urlName || category.code).toLowerCase()
-  if (key === 'exhibition' || key === 'exhibitions') {
+  const keys = [category.code, category.urlName]
+    .filter((value): value is string => Boolean(value))
+    .map((value) => value.toLowerCase())
+  if (keys.some((key) => ['exhibition', 'exhibitions', 'exhibition-overview', 'overview'].includes(key))) {
     return '/exhibitions'
   }
   return null
+}
+
+function isExternalLink(linkUrl?: string | null): linkUrl is string {
+  return Boolean(linkUrl && !linkUrl.startsWith('/'))
+}
+
+function handleUnavailableLink(): void {
+  ElMessage.info('该功能即将上线')
 }
 </script>
 
@@ -82,6 +99,20 @@ function getInternalPath(category: PublicCategory): string | null {
 
 .el-dropdown-menu a {
   color: inherit;
+}
+
+.nav-link {
+  font: inherit;
+  text-align: left;
+  background: transparent;
+  border: 0;
+}
+
+.el-dropdown-menu .nav-link {
+  width: 100%;
+  padding: 0;
+  color: inherit;
+  cursor: pointer;
 }
 
 @media (max-width: 760px) {
