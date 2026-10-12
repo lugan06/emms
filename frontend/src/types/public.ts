@@ -38,6 +38,10 @@ export interface PublicContentList {
   isRecommend: number
 }
 
+export interface PublicContent extends PublicContentList {
+  body: string | null
+}
+
 export interface PublicExhibition {
   id: number
   exhibitionCode: string
@@ -94,6 +98,12 @@ export interface PageResult<T> {
 export interface PublicExhibitionQuery {
   keyword?: string
   year?: number
+  page?: number
+  pageSize?: number
+}
+
+export interface PublicContentQuery {
+  keyword?: string
   page?: number
   pageSize?: number
 }

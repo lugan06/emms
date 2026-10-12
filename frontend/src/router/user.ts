@@ -22,5 +22,17 @@ export const userRoutes: RouteRecordRaw = {
       component: () => import('@/views/user/ExhibitionDetailView.vue'),
       meta: { title: 'Exhibition Detail' },
     },
+    {
+      path: 'category/:code',
+      name: 'public-category-content',
+      component: () => import('@/views/user/CategoryContentView.vue'),
+      meta: { title: 'Category Content' },
+    },
+    {
+      path: 'content/:id(\\d+)',
+      name: 'public-content-detail',
+      component: () => import('@/views/user/ContentView.vue'),
+      meta: { title: 'Content Detail' },
+    },
   ],
 }

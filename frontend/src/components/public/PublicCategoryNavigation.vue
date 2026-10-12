@@ -53,6 +53,9 @@ function getInternalPath(category: PublicCategory): string | null {
   if (keys.some((key) => ['exhibition', 'exhibitions', 'exhibition-overview', 'overview'].includes(key))) {
     return '/exhibitions'
   }
+  if (category.code && ['PAGE', 'ARTICLE'].includes(category.modelCode.toUpperCase())) {
+    return `/category/${encodeURIComponent(category.code)}`
+  }
   return null
 }
 
