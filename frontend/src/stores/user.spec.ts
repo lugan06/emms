@@ -5,7 +5,10 @@ import { useUserStore } from './user'
 
 vi.mock('@/api/auth', () => ({
   authApi: {
-    login: vi.fn().mockResolvedValue({ token: 'new-token' }),
+    login: vi.fn().mockResolvedValue({
+      token: 'new-token',
+      user: { id: 1, username: 'admin', nickname: '管理员', avatarUrl: null, roleCode: 'ADMIN' },
+    }),
   },
 }))
 
@@ -29,11 +32,13 @@ describe('user store', () => {
 
     await store.login({ username: 'admin', password: 'secret' })
     expect(store.token).toBe('new-token')
+    expect(store.user?.username).toBe('admin')
     expect(localStorage.getItem('eems:access-token')).toBe('new-token')
 
     store.clearAuth()
     expect(store.token).toBeNull()
     expect(store.isLoggedIn).toBe(false)
+    expect(store.user).toBeNull()
     expect(localStorage.getItem('eems:access-token')).toBeNull()
   })
 })

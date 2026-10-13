@@ -1,0 +1,18 @@
+.cms-page { display: grid; gap: 20px; }
+.cms-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; }
+.cms-heading h1 { margin: 0; font-size: 28px; color: #111827; }
+.cms-heading p { margin: 8px 0 0; color: #6b7280; }
+.cms-panel { padding: 20px; background: #fff; border: 1px solid #e5e7eb; border-radius: 6px; }
+.cms-filters { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.cms-filters > .el-input { width: 250px; }
+.cms-filters > .el-select, .cms-filters > .el-tree-select { width: 200px; }
+.cms-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 20px; }
+.full-width { width: 100%; }
+.cms-pagination { display: flex; justify-content: center; margin-top: 20px; }
+.cms-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 20px; }
+.cms-section-title { margin: 0 0 20px; font-size: 18px; }
+@media (max-width: 720px) {
+  .cms-heading { flex-direction: column; }
+  .cms-form-grid { grid-template-columns: 1fr; }
+  .cms-panel { padding: 16px; }
+}
