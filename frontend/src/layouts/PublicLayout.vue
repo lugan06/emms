@@ -3,12 +3,7 @@
     <header class="user-header">
       <div class="header-inner">
         <RouterLink class="brand" to="/">
-          <img
-            v-if="publicStore.site?.logoUrl && !logoLoadFailed"
-            :src="resolveAssetUrl(publicStore.site.logoUrl)"
-            :alt="publicStore.site.siteTitle || 'EEMS'"
-            @error="logoLoadFailed = true"
-          />
+          <SiteLogo :logo-url="publicStore.site?.logoUrl" :title="publicStore.site?.siteTitle" />
           <span>{{ publicStore.site?.siteTitle || 'EEMS' }}</span>
         </RouterLink>
         <PublicCategoryNavigation :categories="publicStore.categories" :loading="publicStore.navigationLoading" />
@@ -39,15 +34,14 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted } from 'vue'
 import { RouterLink, RouterView } from 'vue-router'
 
 import PublicCategoryNavigation from '@/components/public/PublicCategoryNavigation.vue'
+import SiteLogo from '@/components/public/SiteLogo.vue'
 import { usePublicStore } from '@/stores/public'
-import { resolveAssetUrl } from '@/utils/asset'
 
 const publicStore = usePublicStore()
-const logoLoadFailed = ref(false)
 
 onMounted(() => {
   void publicStore.loadNavigation()

@@ -3,22 +3,27 @@
     <aside class="admin-sidebar">
       <RouterLink class="brand" to="/admin">EEMS 管理后台</RouterLink>
       <nav class="admin-nav">
-        <RouterLink to="/admin">
+        <RouterLink to="/admin" :class="{ 'menu-active': isAdminMenuActive(route.path, '/admin') }">
           <el-icon><Odometer /></el-icon>
           <span>控制台</span>
         </RouterLink>
-        <RouterLink to="/admin/exhibitions">
+        <RouterLink to="/admin/exhibitions" :class="{ 'menu-active': isAdminMenuActive(route.path, '/admin/exhibitions') }">
           <el-icon><Calendar /></el-icon>
           <span>展会管理</span>
         </RouterLink>
-        <RouterLink to="/admin/categories">
+        <RouterLink to="/admin/categories" :class="{ 'menu-active': isAdminMenuActive(route.path, '/admin/categories') }">
           <el-icon><Menu /></el-icon>
           <span>栏目管理</span>
         </RouterLink>
-        <RouterLink to="/admin/contents">
+        <RouterLink to="/admin/contents" :class="{ 'menu-active': isAdminMenuActive(route.path, '/admin/contents') }">
           <el-icon><Document /></el-icon>
           <span>内容管理</span>
         </RouterLink>
+        <span class="nav-group">系统配置</span>
+        <RouterLink to="/admin/site" :class="{ 'menu-active': isAdminMenuActive(route.path, '/admin/site') }"><el-icon><Setting /></el-icon><span>站点配置</span></RouterLink>
+        <RouterLink to="/admin/company" :class="{ 'menu-active': isAdminMenuActive(route.path, '/admin/company') }"><el-icon><OfficeBuilding /></el-icon><span>公司信息</span></RouterLink>
+        <RouterLink to="/admin/guestbooks" :class="{ 'menu-active': isAdminMenuActive(route.path, '/admin/guestbooks') }"><el-icon><ChatDotRound /></el-icon><span>留言管理</span></RouterLink>
+        <RouterLink v-if="isSuperAdmin(userStore.user)" to="/admin/logs" :class="{ 'menu-active': isAdminMenuActive(route.path, '/admin/logs') }"><el-icon><Tickets /></el-icon><span>日志管理</span></RouterLink>
       </nav>
     </aside>
     <section class="admin-content">
@@ -32,6 +37,7 @@
             <strong>{{ userStore.user?.nickname || userStore.user?.username || '管理员' }}</strong>
             <span>{{ userStore.user?.roleCode || 'ADMIN' }}</span>
           </div>
+          <el-button text @click="passwordDialogVisible = true">修改密码</el-button>
           <el-button text :icon="SwitchButton" @click="logout">退出登录</el-button>
         </div>
       </header>
@@ -39,18 +45,23 @@
         <RouterView />
       </main>
     </section>
+    <PasswordChangeDialog v-model="passwordDialogVisible" />
   </div>
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
-import { Calendar, Document, Menu, Odometer, SwitchButton } from '@element-plus/icons-vue'
+import { Calendar, Document, Menu, Odometer, SwitchButton, Setting, OfficeBuilding, ChatDotRound, Tickets } from '@element-plus/icons-vue'
+import { isAdminMenuActive, isSuperAdmin } from '@/utils/system'
 
 import { useUserStore } from '@/stores/user'
+import PasswordChangeDialog from '@/components/admin/PasswordChangeDialog.vue'
 
 const router = useRouter()
 const route = useRoute()
 const userStore = useUserStore()
+const passwordDialogVisible = ref(false)
 
 function logout(): void {
   userStore.clearAuth()
@@ -100,7 +111,7 @@ function logout(): void {
   cursor: pointer;
 }
 
-.admin-nav a.router-link-active,
+.admin-nav a.menu-active,
 .admin-nav a:hover {
   color: #ffffff;
   background: #374151;
@@ -109,6 +120,8 @@ function logout(): void {
 .admin-nav .el-icon {
   font-size: 16px;
 }
+
+.nav-group { padding: 14px 12px 4px; color: #9ca3af; font-size: 12px; }
 
 .admin-content {
   flex: 1;

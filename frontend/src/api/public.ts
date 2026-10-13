@@ -1,5 +1,6 @@
 import { http } from '@/utils/http'
 import type {
+  GuestbookCreateRequest,
   PageResult,
   PublicCategory,
   PublicContent,
@@ -11,6 +12,10 @@ import type {
 } from '@/types/public'
 
 export const publicApi = {
+  submitGuestbook(payload: GuestbookCreateRequest): Promise<null> {
+    return http.post<null, null>('/api/public/guestbook', payload)
+  },
+
   home(): Promise<PublicHome> {
     return http.get<PublicHome, PublicHome>('/api/public/home')
   },

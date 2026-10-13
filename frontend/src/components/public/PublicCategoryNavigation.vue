@@ -35,11 +35,14 @@
 </template>
 
 <script setup lang="ts">
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRouter } from 'vue-router'
 import { ArrowDown } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 
 import type { PublicCategory } from '@/types/public'
+import { getCategoryInternalPath, isExternalCategoryLink } from '@/utils/public-navigation'
+
+const router = useRouter()
 
 defineProps<{
   categories: PublicCategory[]
@@ -47,20 +50,15 @@ defineProps<{
 }>()
 
 function getInternalPath(category: PublicCategory): string | null {
-  const keys = [category.code, category.urlName]
-    .filter((value): value is string => Boolean(value))
-    .map((value) => value.toLowerCase())
-  if (keys.some((key) => ['exhibition', 'exhibitions', 'exhibition-overview', 'overview'].includes(key))) {
-    return '/exhibitions'
-  }
-  if (category.code && ['PAGE', 'ARTICLE'].includes(category.modelCode.toUpperCase())) {
-    return `/category/${encodeURIComponent(category.code)}`
-  }
-  return null
+  return getCategoryInternalPath(category, path => {
+    const resolved = router.resolve(path)
+    return resolved.matched.length > 0 && resolved.matched.every(record => !record.path.includes(':pathMatch'))
+      && !resolved.path.startsWith('/admin')
+  })
 }
 
 function isExternalLink(linkUrl?: string | null): linkUrl is string {
-  return Boolean(linkUrl && !linkUrl.startsWith('/'))
+  return isExternalCategoryLink(linkUrl)
 }
 
 function handleUnavailableLink(): void {

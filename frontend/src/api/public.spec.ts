@@ -1,9 +1,18 @@
 import { describe, expect, it, vi } from 'vitest'
 
-const { get } = vi.hoisted(() => ({ get: vi.fn() }))
-vi.mock('@/utils/http', () => ({ http: { get } }))
+const { get, post } = vi.hoisted(() => ({ get: vi.fn(), post: vi.fn() }))
+vi.mock('@/utils/http', () => ({ http: { get, post } }))
 
 describe('publicApi', () => {
+  it('submits the documented guestbook fields and propagates business failures', async () => {
+    const { publicApi } = await import('./public')
+    const payload = { name: '访客', phone: null, email: null, companyName: null, message: '咨询展会信息' }
+    post.mockResolvedValueOnce(null)
+    expect(await publicApi.submitGuestbook(payload)).toBeNull()
+    expect(post).toHaveBeenCalledWith('/api/public/guestbook', payload)
+    post.mockRejectedValueOnce(new Error('请求过于频繁'))
+    await expect(publicApi.submitGuestbook(payload)).rejects.toThrow('请求过于频繁')
+  })
   it('calls the public home endpoint', async () => {
     const { publicApi } = await import('./public')
     get.mockResolvedValueOnce({ site: null })

@@ -1,5 +1,13 @@
 export type DateTimeString = string
 
+export interface GuestbookCreateRequest {
+  name: string
+  phone: string | null
+  email: string | null
+  companyName: string | null
+  message: string
+}
+
 export interface PublicSite {
   siteTitle: string | null
   siteSubtitle: string | null

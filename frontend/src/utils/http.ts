@@ -6,8 +6,12 @@ import { pinia } from '@/stores'
 import { useUserStore } from '@/stores/user'
 import router from '@/router'
 
+const configuredBaseUrl = String(import.meta.env.VITE_API_BASE_URL || '')
+  .replace(/\/+$/, '')
+  .replace(/\/api$/i, '')
+
 const http = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
+  baseURL: configuredBaseUrl,
   timeout: Number(import.meta.env.VITE_API_TIMEOUT ?? 10000),
   headers: {
     'Content-Type': 'application/json',

@@ -31,6 +31,7 @@
         <el-button :icon="ArrowLeft" @click="goBack">返回栏目</el-button>
       </div>
     </article>
+    <PublicGuestbookForm v-if="!loading && !error && content?.categoryCode === 'contact'" />
   </div>
 </template>
 
@@ -40,6 +41,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ArrowLeft } from '@element-plus/icons-vue'
 
 import { publicApi } from '@/api/public'
+import PublicGuestbookForm from '@/components/public/PublicGuestbookForm.vue'
 import type { PublicContent } from '@/types/public'
 import { resolveAssetUrl } from '@/utils/asset'
 import { formatDateTime } from '@/utils/format'

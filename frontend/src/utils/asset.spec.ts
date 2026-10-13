@@ -15,4 +15,9 @@ describe('resolveAssetUrl', () => {
     expect(resolveAssetUrl('//cdn.example.com/cover.jpg')).toBe('//cdn.example.com/cover.jpg')
     expect(resolveAssetUrl('data:image/png;base64,abc')).toBe('data:image/png;base64,abc')
   })
+
+  it('does not add an API prefix to uploads when an old production base is /api', () => {
+    vi.stubEnv('VITE_API_BASE_URL', '/api')
+    expect(resolveAssetUrl('/uploads/logo.png')).toBe('/uploads/logo.png')
+  })
 })
