@@ -20,7 +20,9 @@
         </div>
         <div v-if="home.currentExhibition" class="hero-exhibition">
           <div v-if="home.currentExhibition.coverUrl" class="hero-image-wrap">
-            <el-image :src="home.currentExhibition.coverUrl" :alt="home.currentExhibition.title" fit="cover" class="hero-image" />
+            <el-image :src="resolveAssetUrl(home.currentExhibition.coverUrl)" :alt="home.currentExhibition.title" fit="cover" class="hero-image">
+              <template #error><div class="hero-image-fallback">EEMS</div></template>
+            </el-image>
           </div>
           <div class="hero-exhibition-copy">
             <p class="hero-eyebrow">CURRENT EXHIBITION</p>
@@ -75,6 +77,7 @@ import PublicContentSection from '@/components/public/PublicContentSection.vue'
 import { publicApi } from '@/api/public'
 import { usePublicStore } from '@/stores/public'
 import type { PublicHome } from '@/types/public'
+import { resolveAssetUrl } from '@/utils/asset'
 import { formatDateRange } from '@/utils/format'
 
 const publicStore = usePublicStore()
@@ -190,6 +193,18 @@ onMounted(() => {
 .hero-image {
   width: 100%;
   height: 100%;
+}
+
+.hero-image-fallback {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  min-height: 250px;
+  color: #ffffff;
+  font-size: 28px;
+  font-weight: 700;
+  background: #334155;
+  place-items: center;
 }
 
 .hero-exhibition-copy {

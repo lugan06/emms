@@ -25,7 +25,9 @@
           @click="openContent(item.id)"
           @keydown.enter="openContent(item.id)"
         >
-          <el-image v-if="item.coverUrl" :src="item.coverUrl" :alt="item.title" fit="cover" class="content-cover" />
+          <el-image v-if="item.coverUrl" :src="resolveAssetUrl(item.coverUrl)" :alt="item.title" fit="cover" class="content-cover">
+            <template #error><div class="content-cover-fallback">EEMS</div></template>
+          </el-image>
           <div v-else class="content-cover cover-fallback">EEMS</div>
           <div class="content-copy">
             <p class="content-date">{{ formatDateTime(item.publishedAt) }}</p>
@@ -59,6 +61,7 @@ import { useRoute, useRouter } from 'vue-router'
 
 import { publicApi } from '@/api/public'
 import type { PageResult, PublicContentList } from '@/types/public'
+import { resolveAssetUrl } from '@/utils/asset'
 import { formatDateTime } from '@/utils/format'
 
 const route = useRoute()
@@ -157,6 +160,18 @@ watch(categoryCode, () => {
   width: 100%;
   height: 100%;
   min-height: 170px;
+}
+
+.content-cover-fallback {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  min-height: 170px;
+  color: #ffffff;
+  font-size: 24px;
+  font-weight: 700;
+  background: #334155;
+  place-items: center;
 }
 
 .cover-fallback {

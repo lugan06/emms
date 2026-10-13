@@ -12,7 +12,9 @@
     <el-empty v-else-if="!exhibition" description="未找到该展会" :image-size="140" />
     <template v-else>
       <section class="detail-hero">
-        <el-image v-if="exhibition.coverUrl" :src="exhibition.coverUrl" :alt="exhibition.title" fit="cover" class="detail-cover" />
+        <el-image v-if="exhibition.coverUrl" :src="resolveAssetUrl(exhibition.coverUrl)" :alt="exhibition.title" fit="cover" class="detail-cover">
+          <template #error><div class="detail-cover-fallback">EEMS</div></template>
+        </el-image>
         <div class="detail-hero-copy">
           <p class="eyebrow">{{ exhibition.exhibitionCode }}</p>
           <h1>{{ exhibition.title }}</h1>
@@ -66,6 +68,7 @@ import { ArrowLeft, ArrowRight, Calendar, Location } from '@element-plus/icons-v
 
 import { publicApi } from '@/api/public'
 import type { PublicExhibition } from '@/types/public'
+import { resolveAssetUrl } from '@/utils/asset'
 import { formatDateRange, formatDateTime } from '@/utils/format'
 
 const route = useRoute()
@@ -131,6 +134,18 @@ watch(() => route.params.id, () => {
   width: 100%;
   height: 100%;
   min-height: 340px;
+}
+
+.detail-cover-fallback {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  min-height: 340px;
+  color: #ffffff;
+  font-size: 28px;
+  font-weight: 700;
+  background: #334155;
+  place-items: center;
 }
 
 .detail-hero-copy {

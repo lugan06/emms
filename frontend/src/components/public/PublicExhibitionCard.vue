@@ -4,12 +4,14 @@
       <div class="cover-wrap">
         <el-image
           v-if="exhibition.coverUrl"
-          :src="exhibition.coverUrl"
+          :src="resolveAssetUrl(exhibition.coverUrl)"
           :alt="exhibition.title"
           fit="cover"
           lazy
           class="cover"
-        />
+        >
+          <template #error><div class="cover-fallback">EEMS</div></template>
+        </el-image>
         <div v-else class="cover-fallback">EEMS</div>
         <span v-if="exhibition.isCurrent" class="current-badge">当前展会</span>
       </div>
@@ -36,6 +38,7 @@
 import { RouterLink } from 'vue-router'
 
 import type { PublicExhibition } from '@/types/public'
+import { resolveAssetUrl } from '@/utils/asset'
 import { formatDateRange } from '@/utils/format'
 
 defineProps<{

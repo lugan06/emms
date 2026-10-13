@@ -21,7 +21,9 @@
         </div>
       </header>
 
-      <el-image v-if="content.coverUrl" :src="content.coverUrl" :alt="content.title" fit="cover" class="article-cover" />
+      <el-image v-if="content.coverUrl" :src="resolveAssetUrl(content.coverUrl)" :alt="content.title" fit="cover" class="article-cover">
+        <template #error><div class="article-cover-fallback">EEMS</div></template>
+      </el-image>
       <p v-if="content.summary" class="article-summary">{{ content.summary }}</p>
       <div class="article-body" v-html="content.body || '<p>暂无正文内容。</p>'" />
 
@@ -39,6 +41,7 @@ import { ArrowLeft } from '@element-plus/icons-vue'
 
 import { publicApi } from '@/api/public'
 import type { PublicContent } from '@/types/public'
+import { resolveAssetUrl } from '@/utils/asset'
 import { formatDateTime } from '@/utils/format'
 
 const route = useRoute()
@@ -131,6 +134,18 @@ watch(() => route.params.id, () => {
   max-height: 420px;
   margin: 32px auto 0;
   border-radius: 6px;
+}
+
+.article-cover-fallback {
+  display: grid;
+  width: min(100%, 900px);
+  min-height: 220px;
+  margin: 32px auto 0;
+  color: #ffffff;
+  font-size: 28px;
+  font-weight: 700;
+  background: #334155;
+  place-items: center;
 }
 
 .article-summary {
