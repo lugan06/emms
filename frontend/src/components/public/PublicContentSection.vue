@@ -18,6 +18,7 @@
           <p class="content-date">{{ formatDateTime(item.publishedAt) }}</p>
           <h3>{{ item.title }}</h3>
           <p v-if="item.summary" class="content-summary">{{ item.summary }}</p>
+          <div v-if="item.body" class="content-body" v-html="item.body" />
           <p v-if="item.source" class="content-source">来源：{{ item.source }}</p>
         </div>
       </article>
@@ -26,7 +27,7 @@
 </template>
 
 <script setup lang="ts">
-import type { PublicContentList } from '@/types/public'
+import type { PublicContent } from '@/types/public'
 import { resolveAssetUrl } from '@/utils/asset'
 import { formatDateTime } from '@/utils/format'
 
@@ -34,7 +35,7 @@ withDefaults(
   defineProps<{
     eyebrow: string
     title: string
-    items: PublicContentList[]
+    items: PublicContent[]
     emptyText?: string
   }>(),
   {
@@ -77,12 +78,12 @@ h2 {
 
 .content-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: 16px;
 }
 
 .content-item {
-  display: flex;
+  display: block;
   min-height: 148px;
   overflow: hidden;
   background: #ffffff;
@@ -91,9 +92,9 @@ h2 {
 }
 
 .content-cover {
-  flex: 0 0 120px;
-  width: 120px;
-  min-height: 148px;
+  display: block;
+  width: 100%;
+  height: 280px;
 }
 
 .content-cover-fallback {
@@ -110,7 +111,7 @@ h2 {
 
 .content-copy {
   min-width: 0;
-  padding: 16px;
+  padding: 24px;
 }
 
 .content-date,
@@ -121,40 +122,47 @@ h2 {
 }
 
 h3 {
-  display: -webkit-box;
-  overflow: hidden;
   margin: 8px 0 0;
   color: #1f2937;
   font-size: 16px;
   line-height: 1.45;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
+  overflow-wrap: anywhere;
 }
 
 .content-summary {
-  display: -webkit-box;
-  overflow: hidden;
   margin: 8px 0 0;
   color: #6b7280;
   font-size: 13px;
   line-height: 1.5;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
+  overflow-wrap: anywhere;
 }
+
+.content-body {
+  margin-top: 20px;
+  color: #374151;
+  font-size: 16px;
+  line-height: 1.9;
+  overflow-wrap: anywhere;
+}
+
+.content-body :deep(p) { margin: 0 0 16px; }
+.content-body :deep(p:last-child) { margin-bottom: 0; }
+.content-body :deep(img) { max-width: 100%; height: auto; }
+.content-body :deep(h2),
+.content-body :deep(h3) { margin: 24px 0 12px; line-height: 1.4; }
+.content-body :deep(ul),
+.content-body :deep(ol) { padding-left: 24px; }
+.content-body :deep(pre) { white-space: pre-wrap; }
+.content-body :deep(table) { display: block; max-width: 100%; overflow-x: auto; border-collapse: collapse; }
+.content-body :deep(td),
+.content-body :deep(th) { padding: 8px 12px; border: 1px solid #e5e7eb; }
 
 .content-source {
   margin-top: 10px;
 }
 
-@media (max-width: 900px) {
-  .content-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
 @media (max-width: 620px) {
-  .content-grid {
-    grid-template-columns: 1fr;
-  }
+  .content-copy { padding: 18px; }
+  .content-cover { height: 180px; }
 }
 </style>

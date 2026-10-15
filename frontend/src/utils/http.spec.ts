@@ -20,10 +20,13 @@ describe('request base URL', () => {
     expect(http.getUri({ url: '/api/public/home' })).toBe('/api/public/home')
     expect(resolveAssetUrl('/uploads/logo.png')).toBe('/uploads/logo.png')
   })
-  it('keeps the development backend origin, token header and envelope unwrapping', async () => {
-    vi.stubEnv('VITE_API_BASE_URL', 'http://localhost:8080')
+  it('uses same-origin development requests and assets while preserving authentication and response unwrapping', async () => {
+    vi.stubEnv('VITE_API_BASE_URL', '')
     const { http } = await import('./http')
-    expect(http.getUri({ url: '/api/admin/site' })).toBe('http://localhost:8080/api/admin/site')
+    const { resolveAssetUrl } = await import('./asset')
+    expect(http.getUri({ url: '/api/admin/site' })).toBe('/api/admin/site')
+    expect(http.getUri({ url: '/api/public/home' })).toBe('/api/public/home')
+    expect(resolveAssetUrl('/uploads/logo.png')).toBe('/uploads/logo.png')
     const data = { siteTitle: '站点' }
     const result = await http.get('/api/admin/site', { adapter: async config => {
       expect(config.headers.Authorization).toBe('Bearer test-token')

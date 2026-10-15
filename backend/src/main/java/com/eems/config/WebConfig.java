@@ -9,6 +9,8 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 @Configuration
@@ -30,8 +32,12 @@ public class WebConfig implements WebMvcConfigurer {
             prefix = "/uploads";
         }
         String pattern = prefix.replaceAll("/+$", "") + "/**";
-        String location = java.nio.file.Paths.get(fileStorageProperties.getLocalPath())
-                .toAbsolutePath().normalize().toUri().toString();
+        Path root = Paths.get(fileStorageProperties.getLocalPath())
+                .toAbsolutePath().normalize();
+        String location = root.toUri().toString();
+        if (!location.endsWith("/")) {
+            location += "/";
+        }
         registry.addResourceHandler(pattern).addResourceLocations(location);
     }
 

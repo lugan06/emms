@@ -20,7 +20,7 @@ public class PublicHomeController {
     }
 
     @GetMapping
-    @Operation(summary = "获取公共首页聚合数据", description = "返回站点、公司、当前展会和固定首页内容模块")
+    @Operation(summary = "获取公共首页聚合数据", description = "返回站点、公司、当前展会和固定首页内容模块，模块内容包含安全过滤后的富文本正文")
     public Result<PublicHomeVO> home() {
         return Result.success(service.home());
     }

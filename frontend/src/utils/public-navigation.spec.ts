@@ -6,9 +6,9 @@ const contact: PublicCategory = { id: 16, parentId: 0, name: '联系我们', cod
 const pageExists = (path: string) => /^\/content\/\d+(?:\?|$)/.test(path)
 
 describe('public category link destinations', () => {
-  it('opens the designated contact detail even when the live configuration has not changed yet', () => {
-    expect(getCategoryInternalPath(contact, pageExists)).toBe('/content/15')
-    expect(getCategoryInternalPath({ ...contact, modelCode: 'PAGE' }, pageExists)).toBe('/content/15')
+  it('opens contact information without relying on a content primary key', () => {
+    expect(getCategoryInternalPath(contact, pageExists)).toBe('/contact')
+    expect(getCategoryInternalPath({ ...contact, modelCode: 'PAGE' }, pageExists)).toBe('/contact')
   })
   it('uses the configured internal LINK destination, including query parameters', () => {
     expect(getCategoryInternalPath({ ...contact, linkUrl: '/content/21?source=nav' }, pageExists)).toBe('/content/21?source=nav')

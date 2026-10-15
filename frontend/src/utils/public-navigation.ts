@@ -12,8 +12,7 @@ export function getCategoryInternalPath(category: PublicCategory, pageExists: (p
     return null
   }
   const keys = [category.code, category.urlName].map(value => value?.toLowerCase())
-  // The contact article is the explicitly designated destination for this site.
-  if (keys.includes('contact')) return '/content/15'
+  if (keys.includes('contact')) return '/contact'
   if (keys.some(key => key && ['exhibition', 'exhibitions', 'exhibition-overview', 'overview'].includes(key))) {
     return '/exhibitions'
   }

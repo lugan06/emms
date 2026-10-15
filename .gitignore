@@ -25,6 +25,9 @@ pnpm-debug.log*
 **/data/
 *.log
 
+# Local project documentation
+/docs/
+
 # IDE files
 **/.idea/
 **/.vscode/

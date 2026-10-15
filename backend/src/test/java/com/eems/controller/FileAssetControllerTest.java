@@ -23,6 +23,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
@@ -47,6 +48,12 @@ class FileAssetControllerTest {
     void fileEndpointsShouldRequireAuthentication() throws Exception {
         mockMvc.perform(get("/api/admin/files"))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void uploadResourcesShouldNotRequireAuthentication() throws Exception {
+        mockMvc.perform(get("/uploads/not-found.png"))
+                .andExpect(result -> assertNotEquals(401, result.getResponse().getStatus()));
     }
 
     @Test

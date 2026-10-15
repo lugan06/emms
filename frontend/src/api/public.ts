@@ -3,6 +3,7 @@ import type {
   GuestbookCreateRequest,
   PageResult,
   PublicCategory,
+  PublicCompany,
   PublicContent,
   PublicContentQuery,
   PublicContentList,
@@ -18,6 +19,10 @@ export const publicApi = {
 
   home(): Promise<PublicHome> {
     return http.get<PublicHome, PublicHome>('/api/public/home')
+  },
+
+  company(): Promise<PublicCompany> {
+    return http.get<PublicCompany, PublicCompany>('/api/public/company')
   },
 
   categoryTree(): Promise<PublicCategory[]> {

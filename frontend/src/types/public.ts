@@ -77,12 +77,12 @@ export interface PublicHome {
   site: PublicSite
   company: PublicCompany
   currentExhibition: PublicExhibition | null
-  exhibitionIntro: PublicContentList[]
-  samePeriodActivities: PublicContentList[]
-  exhibitionScope: PublicContentList[]
-  exhibitionNews: PublicContentList[]
-  industryNews: PublicContentList[]
-  exhibitorNews: PublicContentList[]
+  exhibitionIntro: PublicContent[]
+  samePeriodActivities: PublicContent[]
+  exhibitionScope: PublicContent[]
+  exhibitionNews: PublicContent[]
+  industryNews: PublicContent[]
+  exhibitorNews: PublicContent[]
 }
 
 export interface PublicCategory {

@@ -5,6 +5,12 @@ export const userRoutes: RouteRecordRaw = {
   component: () => import('@/layouts/PublicLayout.vue'),
   children: [
     {
+      path: 'contact',
+      name: 'public-contact',
+      component: () => import('@/views/user/ContactView.vue'),
+      meta: { title: '联系我们' },
+    },
+    {
       path: '',
       name: 'user-home',
       component: () => import('@/views/user/HomeView.vue'),

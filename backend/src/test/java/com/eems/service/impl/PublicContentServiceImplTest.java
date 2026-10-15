@@ -1,6 +1,10 @@
 package com.eems.service.impl;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.core.MybatisConfiguration;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
+import org.apache.ibatis.builder.MapperBuilderAssistant;
 import com.eems.common.exception.BusinessException;
 import com.eems.dto.PublicContentPageQuery;
 import com.eems.entity.CmsCategory;
@@ -8,10 +12,12 @@ import com.eems.entity.CmsContent;
 import com.eems.mapper.CmsCategoryMapper;
 import com.eems.mapper.CmsContentMapper;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeAll;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -21,6 +27,13 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class PublicContentServiceImplTest {
+    @BeforeAll
+    static void initializeTableMetadata() {
+        MapperBuilderAssistant builder = new MapperBuilderAssistant(new MybatisConfiguration(), "test");
+        TableInfoHelper.initTableInfo(builder, CmsContent.class);
+        TableInfoHelper.initTableInfo(builder, CmsCategory.class);
+    }
+
     private final CmsCategoryMapper categoryMapper = mock(CmsCategoryMapper.class);
     private final CmsContentMapper contentMapper = mock(CmsContentMapper.class);
     private final PublicContentServiceImpl service = new PublicContentServiceImpl(categoryMapper, contentMapper);
@@ -102,6 +115,76 @@ class PublicContentServiceImplTest {
 
         assertEquals(List.of(), service.topByCategory("industry-news", null, 6));
         verify(contentMapper, never()).selectList(any());
+    }
+
+    @Test
+    void homeSectionShouldFilterByExhibitionInsteadOfContentPrimaryKey() {
+        CmsCategory category = category(2L, 0L, "展会简介", "exhibition-intro", 1, 1);
+        CmsContent content = content(102L, 2L, "PUBLISHED");
+        content.setExhibitionId(1L);
+        when(categoryMapper.selectOne(any())).thenReturn(category);
+        when(contentMapper.selectList(any())).thenAnswer(invocation -> {
+            LambdaQueryWrapper<CmsContent> wrapper = invocation.getArgument(0);
+            String sql = wrapper.getSqlSegment();
+            assertTrue(sql.contains("exhibition_id ="));
+            assertFalse(sql.matches("(?s).*\\bid\\s*=.*"));
+            assertTrue(sql.contains("status ="));
+            assertTrue(sql.contains("published_at <="));
+            assertTrue(sql.endsWith("LIMIT 6"));
+            assertTrue(wrapper.getParamNameValuePairs().containsValue(1L));
+            return List.of(content);
+        });
+
+        var result = service.topByCategory("exhibition-intro", 1L, 6);
+
+        assertEquals(102L, result.get(0).id());
+        assertEquals(1L, result.get(0).exhibitionId());
+    }
+
+    @Test
+    void globalNewsShouldNotFilterByExhibitionOrContentId() {
+        when(categoryMapper.selectOne(any())).thenReturn(category(7L, 0L, "行业资讯", "industry-news", 1, 1));
+        when(contentMapper.selectList(any())).thenAnswer(invocation -> {
+            LambdaQueryWrapper<CmsContent> wrapper = invocation.getArgument(0);
+            String sql = wrapper.getSqlSegment();
+            assertFalse(sql.contains("exhibition_id"));
+            assertFalse(sql.matches("(?s).*\\bid\\s*=.*"));
+            return List.of();
+        });
+
+        assertEquals(List.of(), service.topByCategory("industry-news", null, 6));
+    }
+
+    @Test
+    void homeBodyShouldPreserveRichTextAndRemoveExecutableHtml() {
+        when(categoryMapper.selectOne(any())).thenReturn(category(2L, 0L, "展会简介", "exhibition-intro", 1, 1));
+        CmsContent content = content(102L, 2L, "PUBLISHED");
+        content.setBody("<h2>展会亮点</h2><p>完整正文</p><ul><li>参展范围</li></ul>"
+                + "<img src=\"https://example.test/exhibition.png\" onerror=\"alert(1)\">"
+                + "<script>alert(1)</script><a href=\"javascript:alert(1)\">链接</a>");
+        when(contentMapper.selectList(any())).thenReturn(List.of(content));
+
+        String body = service.topByCategory("exhibition-intro", 1L, 6).get(0).body();
+
+        assertTrue(body.contains("<h2>展会亮点</h2>"));
+        assertTrue(body.contains("<p>完整正文</p>"));
+        assertTrue(body.contains("<li>参展范围</li>"));
+        assertTrue(body.contains("https://example.test/exhibition.png"));
+        assertFalse(body.contains("<script"));
+        assertFalse(body.contains("onerror"));
+        assertFalse(body.contains("javascript:"));
+    }
+
+    @Test
+    void homeContentWithoutBodyShouldRemainAvailable() {
+        when(categoryMapper.selectOne(any())).thenReturn(category(2L, 0L, "展会简介", "exhibition-intro", 1, 1));
+        CmsContent content = content(102L, 2L, "PUBLISHED");
+        when(contentMapper.selectList(any())).thenReturn(List.of(content));
+
+        var result = service.topByCategory("exhibition-intro", 1L, 6);
+
+        assertEquals(102L, result.get(0).id());
+        assertEquals(null, result.get(0).body());
     }
 
     private CmsCategory category(Long id, Long parentId, String name, String code, int enabled, int showInNav) {

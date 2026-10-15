@@ -87,7 +87,7 @@ public class PublicContentServiceImpl implements PublicContentService {
     }
 
     @Override
-    public List<PublicContentListVO> topByCategory(String code, Long exhibitionId, int limit) {
+    public List<PublicContentVO> topByCategory(String code, Long exhibitionId, int limit) {
         if (limit <= 0) {
             return List.of();
         }
@@ -95,14 +95,18 @@ public class PublicContentServiceImpl implements PublicContentService {
         if (category == null) {
             return List.of();
         }
-        List<CmsContent> values = contentMapper.selectList(publicContentWrapper(category.getId(), exhibitionId)
+        LambdaQueryWrapper<CmsContent> wrapper = publicContentWrapper(category.getId(), null);
+        if (exhibitionId != null) {
+            wrapper.eq(CmsContent::getExhibitionId, exhibitionId);
+        }
+        List<CmsContent> values = contentMapper.selectList(wrapper
                 .orderByDesc(CmsContent::getIsTop)
                 .orderByDesc(CmsContent::getIsRecommend)
                 .orderByAsc(CmsContent::getSortOrder)
                 .orderByDesc(CmsContent::getPublishedAt)
                 .orderByDesc(CmsContent::getId)
                 .last("LIMIT " + Math.min(limit, 100)));
-        return values.stream().map(value -> PublicContentListVO.from(value, category)).toList();
+        return values.stream().map(value -> PublicContentVO.from(value, category, safeBody(value.getBody()))).toList();
     }
 
     private PublicCategoryVO toCategoryTree(CmsCategory category, Map<Long, List<CmsCategory>> childrenByParent) {

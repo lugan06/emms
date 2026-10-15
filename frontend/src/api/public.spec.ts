@@ -15,11 +15,22 @@ describe('publicApi', () => {
   })
   it('calls the public home endpoint', async () => {
     const { publicApi } = await import('./public')
-    get.mockResolvedValueOnce({ site: null })
+    const response = { exhibitionIntro: [{ id: 102, body: '<p>完整正文</p>' }], exhibitionScope: [{ id: 104, body: '<ul><li>参展范围</li></ul>' }] }
+    get.mockResolvedValueOnce(response)
 
-    await publicApi.home()
+    expect(await publicApi.home()).toEqual(response)
 
     expect(get).toHaveBeenCalledWith('/api/public/home')
+  })
+
+  it('loads configured company contact information and propagates failures', async () => {
+    const { publicApi } = await import('./public')
+    const company = { companyName: '测试公司', telephone: '021-12345678' }
+    get.mockResolvedValueOnce(company)
+    expect(await publicApi.company()).toEqual(company)
+    expect(get).toHaveBeenCalledWith('/api/public/company')
+    get.mockRejectedValueOnce(new Error('加载失败'))
+    await expect(publicApi.company()).rejects.toThrow('加载失败')
   })
 
   it('serializes exhibition filters and pagination', async () => {

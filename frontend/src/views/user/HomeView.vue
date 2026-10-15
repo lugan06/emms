@@ -57,19 +57,20 @@
       </section>
 
       <div class="content-sections">
-        <PublicContentSection eyebrow="ABOUT THE EXHIBITION" title="展会简介" :items="home.exhibitionIntro" />
-        <PublicContentSection eyebrow="IN PARALLEL" title="同期活动" :items="home.samePeriodActivities" />
-        <PublicContentSection eyebrow="EXHIBITOR PROFILE" title="参展范围" :items="home.exhibitionScope" />
-        <PublicContentSection eyebrow="EXHIBITION NEWS" title="展会动态" :items="home.exhibitionNews" />
-        <PublicContentSection eyebrow="INDUSTRY NEWS" title="行业新闻" :items="home.industryNews" />
-        <PublicContentSection eyebrow="EXHIBITOR NEWS" title="展商新闻" :items="home.exhibitorNews" />
+        <PublicContentSection
+          v-for="section in contentSections"
+          :key="section.title"
+          :eyebrow="section.eyebrow"
+          :title="section.title"
+          :items="section.items"
+        />
       </div>
     </template>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { ArrowRight } from '@element-plus/icons-vue'
 
@@ -84,6 +85,19 @@ const publicStore = usePublicStore()
 const home = ref<PublicHome | null>(null)
 const loading = ref(true)
 const error = ref(false)
+
+const contentSections = computed(() => {
+  if (!home.value) return []
+  const value = home.value
+  return [
+    { eyebrow: 'ABOUT THE EXHIBITION', title: '展会简介', items: value.exhibitionIntro },
+    { eyebrow: 'IN PARALLEL', title: '同期活动', items: value.samePeriodActivities },
+    { eyebrow: 'EXHIBITOR PROFILE', title: '参展范围', items: value.exhibitionScope },
+    { eyebrow: 'EXHIBITION NEWS', title: '展会动态', items: value.exhibitionNews },
+    { eyebrow: 'INDUSTRY NEWS', title: '行业新闻', items: value.industryNews },
+    { eyebrow: 'EXHIBITOR NEWS', title: '展商新闻', items: value.exhibitorNews },
+  ].filter(section => section.items.length > 0)
+})
 
 async function loadHome(): Promise<void> {
   loading.value = true

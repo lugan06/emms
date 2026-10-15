@@ -12,5 +12,5 @@ public interface PublicContentService {
     List<PublicCategoryVO> categoryTree();
     PageResult<PublicContentListVO> pageByCategory(String code, PublicContentPageQuery query);
     PublicContentVO get(Long id);
-    List<PublicContentListVO> topByCategory(String code, Long exhibitionId, int limit);
+    List<PublicContentVO> topByCategory(String code, Long exhibitionId, int limit);
 }

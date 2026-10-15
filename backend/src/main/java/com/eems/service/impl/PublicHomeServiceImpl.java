@@ -6,7 +6,7 @@ import com.eems.service.ExhibitionService;
 import com.eems.service.PublicContentService;
 import com.eems.service.PublicHomeService;
 import com.eems.service.SiteConfigService;
-import com.eems.vo.PublicContentListVO;
+import com.eems.vo.PublicContentVO;
 import com.eems.vo.PublicExhibitionVO;
 import com.eems.vo.PublicHomeVO;
 import org.springframework.stereotype.Service;
@@ -35,19 +35,23 @@ public class PublicHomeServiceImpl implements PublicHomeService {
     public PublicHomeVO home() {
         Long currentExhibitionId = siteConfigService.getCurrentExhibitionId();
         PublicExhibitionVO currentExhibition = publicExhibition(currentExhibitionId);
+        Long visibleExhibitionId = currentExhibition == null ? null : currentExhibitionId;
         return new PublicHomeVO(
                 siteConfigService.getPublicDefault(),
                 companyProfileService.getPublicDefault(),
                 currentExhibition,
-                current(currentExhibitionId, "exhibition-intro"),
-                current(currentExhibitionId, "same-period-activities"),
-                current(currentExhibitionId, "exhibition-scope"),
-                current(currentExhibitionId, "exhibition-news"),
+                current(visibleExhibitionId, "exhibition-intro"),
+                current(visibleExhibitionId, "events"),
+                current(visibleExhibitionId, "exhibition-scope"),
+                current(visibleExhibitionId, "exhibition-news"),
                 publicContentService.topByCategory("industry-news", null, SECTION_LIMIT),
                 publicContentService.topByCategory("exhibitor-news", null, SECTION_LIMIT));
     }
 
-    private List<PublicContentListVO> current(Long exhibitionId, String categoryCode) {
+    private List<PublicContentVO> current(Long exhibitionId, String categoryCode) {
+        if (exhibitionId == null) {
+            return List.of();
+        }
         return publicContentService.topByCategory(categoryCode, exhibitionId, SECTION_LIMIT);
     }
 
