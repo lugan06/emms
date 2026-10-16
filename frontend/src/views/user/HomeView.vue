@@ -12,27 +12,49 @@
 
     <template v-else-if="home">
       <section class="hero-section">
-        <div class="hero-copy">
-          <p class="hero-eyebrow">EEMS EXHIBITION PLATFORM</p>
-          <h1>{{ home.site.siteTitle || '展会管理平台' }}</h1>
-          <p class="hero-subtitle">{{ home.site.siteSubtitle || home.site.description || '连接品牌、展商与行业伙伴' }}</p>
-          <RouterLink class="hero-action" to="/exhibitions">浏览全部展会 <el-icon><ArrowRight /></el-icon></RouterLink>
-        </div>
-        <div v-if="home.currentExhibition" class="hero-exhibition">
-          <div v-if="home.currentExhibition.coverUrl" class="hero-image-wrap">
-            <el-image :src="resolveAssetUrl(home.currentExhibition.coverUrl)" :alt="home.currentExhibition.title" fit="cover" class="hero-image">
-              <template #error><div class="hero-image-fallback">EEMS</div></template>
-            </el-image>
+        <div class="hero-poster" :style="heroPosterStyle" aria-hidden="true"></div>
+        <video
+          v-if="videoAllowed"
+          ref="heroVideo"
+          class="hero-video"
+          :class="{ 'is-ready': videoReady }"
+          autoplay
+          :muted="true"
+          loop
+          playsinline
+          preload="metadata"
+          :poster="heroCoverUrl || undefined"
+          aria-hidden="true"
+          @canplay="handleVideoCanPlay"
+          @error="handleVideoError"
+        >
+          <source :src="heroVideoSource" type="video/mp4">
+        </video>
+        <div class="hero-video-overlay" aria-hidden="true"></div>
+
+        <div class="hero-content">
+          <div class="hero-copy">
+            <p class="hero-eyebrow">EEMS EXHIBITION PLATFORM</p>
+            <h1>{{ home.site.siteTitle || '展会管理平台' }}</h1>
+            <p class="hero-subtitle">{{ home.site.siteSubtitle || home.site.description || '连接品牌、展商与行业伙伴' }}</p>
+            <RouterLink class="hero-action" to="/exhibitions">浏览全部展会 <el-icon><ArrowRight /></el-icon></RouterLink>
           </div>
-          <div class="hero-exhibition-copy">
-            <p class="hero-eyebrow">CURRENT EXHIBITION</p>
-            <h2>{{ home.currentExhibition.title }}</h2>
-            <p>{{ formatDateRange(home.currentExhibition.startAt, home.currentExhibition.endAt) }}</p>
-            <p v-if="home.currentExhibition.venue">{{ home.currentExhibition.venue }}</p>
-            <RouterLink :to="`/exhibitions/${home.currentExhibition.id}`" class="hero-detail-link">查看展会详情 <el-icon><ArrowRight /></el-icon></RouterLink>
+          <div v-if="home.currentExhibition" class="hero-exhibition">
+            <div v-if="home.currentExhibition.coverUrl" class="hero-image-wrap">
+              <el-image :src="resolveAssetUrl(home.currentExhibition.coverUrl)" :alt="home.currentExhibition.title" fit="cover" class="hero-image">
+                <template #error><div class="hero-image-fallback">EEMS</div></template>
+              </el-image>
+            </div>
+            <div class="hero-exhibition-copy">
+              <p class="hero-eyebrow">CURRENT EXHIBITION</p>
+              <h2>{{ home.currentExhibition.title }}</h2>
+              <p>{{ formatDateRange(home.currentExhibition.startAt, home.currentExhibition.endAt) }}</p>
+              <p v-if="home.currentExhibition.venue">{{ home.currentExhibition.venue }}</p>
+              <RouterLink :to="`/exhibitions/${home.currentExhibition.id}`" class="hero-detail-link">查看展会详情 <el-icon><ArrowRight /></el-icon></RouterLink>
+            </div>
           </div>
+          <div v-else class="hero-empty">当前暂无主展会</div>
         </div>
-        <div v-else class="hero-empty">当前暂无主展会</div>
       </section>
 
       <section v-if="home.currentExhibition" class="current-section">
@@ -70,7 +92,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { ArrowRight } from '@element-plus/icons-vue'
 
@@ -85,6 +107,25 @@ const publicStore = usePublicStore()
 const home = ref<PublicHome | null>(null)
 const loading = ref(true)
 const error = ref(false)
+const heroVideo = ref<HTMLVideoElement | null>(null)
+const videoReady = ref(false)
+const videoFailed = ref(false)
+const prefersStaticHero = ref(false)
+const heroVideoSource = '/videos/zhidonghua-b.mp4'
+let heroMediaQueries: MediaQueryList[] = []
+
+const heroCoverUrl = computed(() => {
+  const coverUrl = home.value?.currentExhibition?.coverUrl
+  return coverUrl ? resolveAssetUrl(coverUrl) : ''
+})
+
+const heroPosterStyle = computed(() => {
+  if (!heroCoverUrl.value) return {}
+  const safeUrl = heroCoverUrl.value.replace(/["\\]/g, '\\$&')
+  return { backgroundImage: `url("${safeUrl}")` }
+})
+
+const videoAllowed = computed(() => !prefersStaticHero.value && !videoFailed.value)
 
 const contentSections = computed(() => {
   if (!home.value) return []
@@ -105,6 +146,8 @@ async function loadHome(): Promise<void> {
   try {
     const value = await publicApi.home()
     home.value = value
+    videoReady.value = false
+    videoFailed.value = false
     publicStore.setSite(value.site, value.company)
   } catch {
     error.value = true
@@ -113,8 +156,70 @@ async function loadHome(): Promise<void> {
   }
 }
 
+interface NetworkInformationLike {
+  saveData?: boolean
+  effectiveType?: string
+}
+
+function updateHeroPlaybackPreference(): void {
+  if (typeof window === 'undefined') return
+
+  const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
+  const mobileViewport = window.matchMedia?.('(max-width: 760px)').matches ?? window.innerWidth <= 760
+  const connection = (navigator as Navigator & { connection?: NetworkInformationLike }).connection
+  const limitedConnection = connection?.saveData === true
+    || connection?.effectiveType === 'slow-2g'
+    || connection?.effectiveType === '2g'
+
+  prefersStaticHero.value = reducedMotion || mobileViewport || limitedConnection
+  if (prefersStaticHero.value) {
+    videoReady.value = false
+    heroVideo.value?.pause()
+  }
+}
+
+function handleHeroPreferenceChange(): void {
+  updateHeroPlaybackPreference()
+}
+
+function handleVideoCanPlay(): void {
+  videoFailed.value = false
+  videoReady.value = true
+}
+
+function handleVideoError(): void {
+  videoReady.value = false
+  videoFailed.value = true
+}
+
 onMounted(() => {
+  updateHeroPlaybackPreference()
+  if (typeof window.matchMedia === 'function') {
+    heroMediaQueries = [
+      window.matchMedia('(prefers-reduced-motion: reduce)'),
+      window.matchMedia('(max-width: 760px)'),
+    ]
+    heroMediaQueries.forEach(query => {
+      if (typeof query.addEventListener === 'function') {
+        query.addEventListener('change', handleHeroPreferenceChange)
+      } else {
+        query.addListener(handleHeroPreferenceChange)
+      }
+    })
+  }
+  window.addEventListener('resize', updateHeroPlaybackPreference)
   void loadHome()
+})
+
+onBeforeUnmount(() => {
+  heroMediaQueries.forEach(query => {
+    if (typeof query.removeEventListener === 'function') {
+      query.removeEventListener('change', handleHeroPreferenceChange)
+    } else {
+      query.removeListener(handleHeroPreferenceChange)
+    }
+  })
+  window.removeEventListener('resize', updateHeroPlaybackPreference)
 })
 </script>
 
@@ -133,15 +238,56 @@ onMounted(() => {
 
 .hero-section {
   position: relative;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(320px, 0.8fr);
-  gap: 48px;
-  min-height: 360px;
-  padding: 56px;
+  isolation: isolate;
+  min-height: 500px;
+  padding: 64px;
   overflow: hidden;
   color: #ffffff;
   background: #1e3a5f;
   border-radius: 8px;
+}
+
+.hero-poster,
+.hero-video,
+.hero-video-overlay {
+  position: absolute;
+  inset: 0;
+}
+
+.hero-poster {
+  z-index: 0;
+  background-color: #1e3a5f;
+  background-position: center;
+  background-size: cover;
+}
+
+.hero-video {
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 300ms ease;
+}
+
+.hero-video.is-ready {
+  opacity: 1;
+}
+
+.hero-video-overlay {
+  z-index: 2;
+  background: rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 3;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 0.8fr);
+  gap: 48px;
+  min-height: 368px;
 }
 
 .hero-copy {
@@ -254,10 +400,39 @@ onMounted(() => {
 }
 
 .current-section {
+  position: relative;
+  overflow: hidden;
   padding: 32px;
   background: #ffffff;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
+  box-shadow: 0 2px 8px rgb(15 23 42 / 3%);
+  transition: border-color 220ms ease, box-shadow 220ms ease, transform 220ms ease;
+}
+
+.current-section::before {
+  position: absolute;
+  top: 0;
+  left: 32px;
+  width: 96px;
+  height: 3px;
+  content: '';
+  background: #2563eb;
+  transform: scaleX(0.45);
+  transform-origin: left center;
+  transition: transform 260ms ease;
+}
+
+.current-section:hover,
+.current-section:focus-within {
+  border-color: #93c5fd;
+  box-shadow: 0 16px 32px rgb(37 99 235 / 10%);
+  transform: translateY(-4px);
+}
+
+.current-section:hover::before,
+.current-section:focus-within::before {
+  transform: scaleX(1);
 }
 
 .current-heading,
@@ -299,6 +474,12 @@ onMounted(() => {
   margin: 0;
   color: #4b5563;
   line-height: 1.8;
+  transition: color 220ms ease;
+}
+
+.current-section:hover .current-summary,
+.current-section:focus-within .current-summary {
+  color: #1f2937;
 }
 
 .current-meta {
@@ -324,12 +505,23 @@ onMounted(() => {
 }
 
 .outline-link {
+  position: relative;
+  overflow: hidden;
   flex: 0 0 auto;
   padding: 9px 14px;
   color: #2563eb;
   font-size: 13px;
   border: 1px solid #bfdbfe;
   border-radius: 4px;
+  transition: color 180ms ease, background-color 180ms ease, border-color 180ms ease, transform 180ms ease;
+}
+
+.outline-link:hover,
+.outline-link:focus-visible {
+  color: #1d4ed8;
+  background: #eff6ff;
+  border-color: #60a5fa;
+  transform: translateX(3px);
 }
 
 .content-sections {
@@ -339,8 +531,13 @@ onMounted(() => {
 
 @media (max-width: 860px) {
   .hero-section {
+    min-height: 460px;
+    padding: 48px;
+  }
+
+  .hero-content {
     grid-template-columns: 1fr;
-    padding: 40px;
+    min-height: 364px;
   }
 
   .hero-exhibition {
@@ -349,9 +546,26 @@ onMounted(() => {
 }
 
 @media (max-width: 620px) {
-  .hero-section,
+  .hero-section {
+    min-height: 540px;
+    padding: 28px;
+  }
+
   .current-section {
     padding: 24px;
+  }
+
+  .current-section::before {
+    left: 24px;
+  }
+
+  .hero-content {
+    min-height: 0;
+  }
+
+  .hero-section,
+  .current-section {
+    border-radius: 8px;
   }
 
   .hero-exhibition {
@@ -364,6 +578,15 @@ onMounted(() => {
 
   .current-content {
     display: grid;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .current-section,
+  .current-section::before,
+  .current-summary,
+  .outline-link {
+    transition: none;
   }
 }
 </style>

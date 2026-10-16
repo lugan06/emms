@@ -58,6 +58,36 @@ beforeEach(() => { vi.resetAllMocks() })
 afterEach(() => { app?.unmount(); app = undefined; container?.remove() })
 
 describe('home content sections', () => {
+  it('renders the video hero with a cover poster and falls back after a video error', async () => {
+    const value = homeFixture()
+    value.currentExhibition = {
+      id: 3, exhibitionCode: 'EEMS-2027', title: '绿色涂料展', subtitle: null,
+      year: 2027, edition: null, coverUrl: '/uploads/exhibitions/hero-cover.jpg',
+      summary: '展会摘要', description: null, venue: '上海新国际博览中心', address: null,
+      startAt: '2027-03-10T09:00:00', endAt: '2027-03-12T17:00:00',
+      publishedAt: null, contactName: null, contactPhone: null, registrationUrl: null,
+      showOnHome: 1, homeSort: 1, isCurrent: true,
+    }
+    home.mockResolvedValue(value)
+    await mount(HomeView)
+
+    await vi.waitFor(() => expect(container.querySelector('.hero-video')).not.toBeNull())
+    const video = container.querySelector<HTMLVideoElement>('.hero-video')!
+    expect(video.hasAttribute('autoplay')).toBe(true)
+    expect(video.muted || video.defaultMuted).toBe(true)
+    expect(video.hasAttribute('loop')).toBe(true)
+    expect(video.hasAttribute('playsinline')).toBe(true)
+    expect(video.querySelector('source')?.getAttribute('src')).toBe('/videos/zhidonghua-b.mp4')
+    expect(container.querySelector<HTMLElement>('.hero-poster')?.style.backgroundImage).toContain('hero-cover.jpg')
+
+    video.dispatchEvent(new Event('canplay'))
+    await vi.waitFor(() => expect(video.classList.contains('is-ready')).toBe(true))
+
+    video.dispatchEvent(new Event('error'))
+    await vi.waitFor(() => expect(container.querySelector('.hero-video')).toBeNull())
+    expect(container.querySelector<HTMLElement>('.hero-poster')?.style.backgroundImage).toContain('hero-cover.jpg')
+  })
+
   it('renders returned introduction and scope and stores the site information', async () => {
     const value = homeFixture()
     value.exhibitionIntro = [item(102, '已发布的展会简介')]

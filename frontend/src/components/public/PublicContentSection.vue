@@ -10,7 +10,12 @@
 
     <el-empty v-if="items.length === 0" :description="emptyText" :image-size="72" />
     <div v-else class="content-grid">
-      <article v-for="item in items" :key="item.id" class="content-item">
+      <article
+        v-for="(item, index) in items"
+        :key="item.id"
+        class="content-item"
+        :style="{ animationDelay: `${index * 80}ms` }"
+      >
         <el-image v-if="item.coverUrl" :src="resolveAssetUrl(item.coverUrl)" :alt="item.title" fit="cover" class="content-cover">
           <template #error><div class="content-cover-fallback">EEMS</div></template>
         </el-image>
@@ -83,18 +88,55 @@ h2 {
 }
 
 .content-item {
+  position: relative;
   display: block;
   min-height: 148px;
   overflow: hidden;
   background: #ffffff;
   border: 1px solid #e5e7eb;
   border-radius: 6px;
+  box-shadow: 0 2px 8px rgb(15 23 42 / 3%);
+  animation: content-card-in 560ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  transition: border-color 220ms ease, box-shadow 220ms ease, transform 220ms ease;
+}
+
+.content-item::before {
+  position: absolute;
+  inset: 0 auto 0 0;
+  z-index: 1;
+  width: 3px;
+  content: '';
+  background: #2563eb;
+  opacity: 0;
+  transform: scaleY(0.35);
+  transform-origin: center;
+  transition: opacity 220ms ease, transform 220ms ease;
+}
+
+.content-item:hover,
+.content-item:focus-within {
+  border-color: #93c5fd;
+  box-shadow: 0 14px 30px rgb(37 99 235 / 10%);
+  transform: translateY(-5px);
+}
+
+.content-item:hover::before,
+.content-item:focus-within::before {
+  opacity: 1;
+  transform: scaleY(1);
 }
 
 .content-cover {
   display: block;
   width: 100%;
   height: 280px;
+  transition: transform 420ms cubic-bezier(0.22, 1, 0.36, 1), filter 220ms ease;
+}
+
+.content-item:hover .content-cover,
+.content-item:focus-within .content-cover {
+  filter: saturate(1.05);
+  transform: scale(1.025);
 }
 
 .content-cover-fallback {
@@ -127,6 +169,12 @@ h3 {
   font-size: 16px;
   line-height: 1.45;
   overflow-wrap: anywhere;
+  transition: color 180ms ease;
+}
+
+.content-item:hover h3,
+.content-item:focus-within h3 {
+  color: #1d4ed8;
 }
 
 .content-summary {
@@ -164,5 +212,27 @@ h3 {
 @media (max-width: 620px) {
   .content-copy { padding: 18px; }
   .content-cover { height: 180px; }
+}
+
+@keyframes content-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .content-item,
+  .content-item::before,
+  .content-cover,
+  h3 {
+    animation: none;
+    transition: none;
+  }
 }
 </style>
