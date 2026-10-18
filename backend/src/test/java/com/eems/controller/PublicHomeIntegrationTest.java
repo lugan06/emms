@@ -145,6 +145,10 @@ class PublicHomeIntegrationTest {
                 .andExpect(jsonPath("$.components.schemas.PublicHomeVO.properties.exhibitionIntro.items['$ref']").value("#/components/schemas/PublicContentVO"))
                 .andExpect(jsonPath("$.components.schemas.PublicContentVO.properties.body.type").value("string"))
                 .andExpect(jsonPath("$.components.schemas.PublicContentVO.properties.body.description").value("富文本正文"));
+        mockMvc.perform(get("/v3/api-docs"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.components.schemas.CategorySaveRequest.properties.code.description")
+                        .value("栏目编码，当前站点内唯一"));
     }
 
     @Test

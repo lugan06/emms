@@ -16,6 +16,7 @@ import com.eems.mapper.CmsContentMapper;
 import com.eems.mapper.ExhibitionMapper;
 import com.eems.service.ContentService;
 import com.eems.service.OperationLogService;
+import com.eems.site.SiteContext;
 import com.eems.vo.ContentVO;
 import org.jsoup.Jsoup;
 import org.jsoup.safety.Safelist;
@@ -168,12 +169,16 @@ public class ContentServiceImpl implements ContentService {
     }
 
     private void validateRelations(ContentSaveRequest request) {
+        Long siteId = SiteContext.requireSiteId();
         CmsCategory category = categoryMapper.selectById(request.getCategoryId());
-        if (category == null) {
+        if (category == null || !siteId.equals(category.getSiteId())) {
             throw new BusinessException("CATEGORY_NOT_FOUND", "栏目不存在或已删除");
         }
-        if (request.getExhibitionId() != null && exhibitionMapper.selectById(request.getExhibitionId()) == null) {
-            throw new BusinessException("EXHIBITION_NOT_FOUND", "关联展会不存在或已删除");
+        if (request.getExhibitionId() != null) {
+            Exhibition exhibition = exhibitionMapper.selectById(request.getExhibitionId());
+            if (exhibition == null || !siteId.equals(exhibition.getSiteId())) {
+                throw new BusinessException("EXHIBITION_NOT_FOUND", "关联展会不存在或已删除");
+            }
         }
     }
 
@@ -182,7 +187,7 @@ public class ContentServiceImpl implements ContentService {
         if (normalized == null) {
             return;
         }
-        CmsContent existing = mapper.selectIncludingDeletedBySlug(normalized);
+        CmsContent existing = mapper.selectIncludingDeletedBySlug(normalized, SiteContext.requireSiteId());
         if (existing != null && !existing.getId().equals(currentId)) {
             throw new BusinessException("CONTENT_SLUG_EXISTS", "内容 URL 标识已存在");
         }

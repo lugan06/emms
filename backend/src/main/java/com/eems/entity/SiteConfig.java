@@ -1,6 +1,9 @@
 package com.eems.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.FieldFill;
+import com.baomidou.mybatisplus.annotation.FieldStrategy;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
@@ -11,6 +14,8 @@ import java.time.LocalDateTime;
 public class SiteConfig {
     @TableId(type = IdType.AUTO)
     private Long id;
+    @TableField(fill = FieldFill.INSERT, updateStrategy = FieldStrategy.NEVER)
+    private Long siteId;
     private String configCode;
     private Long currentExhibitionId;
     private String siteTitle;
@@ -30,6 +35,8 @@ public class SiteConfig {
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
+    public Long getSiteId() { return siteId; }
+    public void setSiteId(Long siteId) { this.siteId = siteId; }
     public String getConfigCode() { return configCode; }
     public void setConfigCode(String configCode) { this.configCode = configCode; }
     public Long getCurrentExhibitionId() { return currentExhibitionId; }

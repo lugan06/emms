@@ -16,6 +16,7 @@ import com.eems.mapper.AdminUserMapper;
 import com.eems.mapper.SiteConfigMapper;
 import com.eems.service.ExhibitionService;
 import com.eems.service.OperationLogService;
+import com.eems.site.SiteContext;
 import com.eems.vo.ExhibitionVO;
 import com.eems.vo.PublicExhibitionVO;
 import org.springframework.stereotype.Service;
@@ -252,7 +253,8 @@ public class ExhibitionServiceImpl implements ExhibitionService {
 
     private void ensureCodeAvailable(String code, Long currentId) {
         Exhibition existing = mapper.selectOne(new LambdaQueryWrapper<Exhibition>()
-                .eq(Exhibition::getExhibitionCode, code));
+                .eq(Exhibition::getExhibitionCode, code)
+                .eq(Exhibition::getSiteId, SiteContext.requireSiteId()));
         if (existing != null && !existing.getId().equals(currentId)) {
             throw new BusinessException("EXHIBITION_CODE_EXISTS", "展会编码已存在");
         }

@@ -13,7 +13,10 @@ import com.eems.mapper.CmsCategoryMapper;
 import com.eems.mapper.CmsContentMapper;
 import com.eems.mapper.ExhibitionMapper;
 import com.eems.service.OperationLogService;
+import com.eems.site.SiteContextTestSupport;
 import com.eems.vo.ContentVO;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -35,6 +38,12 @@ class ContentServiceImplTest {
     private final OperationLogService logService = mock(OperationLogService.class);
     private final ContentServiceImpl service = new ContentServiceImpl(
             mapper, categoryMapper, exhibitionMapper, adminUserMapper, logService);
+
+    @BeforeEach
+    void selectSite() { SiteContextTestSupport.selectDefaultSite(); }
+
+    @AfterEach
+    void clearSite() { SiteContextTestSupport.clear(); }
 
     @Test
     void pageShouldApplyContentFilters() {
@@ -59,7 +68,7 @@ class ContentServiceImplTest {
     @Test
     void createShouldSanitizeBodyAndWriteModuleLog() {
         when(categoryMapper.selectById(2L)).thenReturn(category(2L));
-        when(mapper.selectIncludingDeletedBySlug("news")).thenReturn(null);
+        when(mapper.selectIncludingDeletedBySlug("news", 1L)).thenReturn(null);
         AdminUser admin = new AdminUser();
         admin.setId(8L);
         when(adminUserMapper.selectOne(any())).thenReturn(admin);
@@ -137,6 +146,36 @@ class ContentServiceImplTest {
         verify(mapper, never()).insert(any(CmsContent.class));
     }
 
+    @Test
+    void createShouldRejectCategoryReturnedFromAnotherSite() {
+        CmsCategory category = category(2L);
+        category.setSiteId(2L);
+        when(categoryMapper.selectById(2L)).thenReturn(category);
+
+        BusinessException exception = assertThrows(BusinessException.class,
+                () -> service.create(request(), "admin"));
+
+        assertEquals("CATEGORY_NOT_FOUND", exception.getCode());
+        verify(mapper, never()).insert(any(CmsContent.class));
+    }
+
+    @Test
+    void updateShouldRejectExhibitionReturnedFromAnotherSite() {
+        ContentSaveRequest request = request();
+        request.setExhibitionId(9L);
+        when(categoryMapper.selectById(2L)).thenReturn(category(2L));
+        Exhibition exhibition = new Exhibition();
+        exhibition.setId(9L);
+        exhibition.setSiteId(2L);
+        when(exhibitionMapper.selectById(9L)).thenReturn(exhibition);
+
+        BusinessException exception = assertThrows(BusinessException.class,
+                () -> service.update(1L, request, "admin"));
+
+        assertEquals("EXHIBITION_NOT_FOUND", exception.getCode());
+        verify(mapper, never()).updateById(any(CmsContent.class));
+    }
+
     private ContentSaveRequest request() {
         ContentSaveRequest request = new ContentSaveRequest();
         request.setCategoryId(2L);
@@ -164,6 +203,7 @@ class ContentServiceImplTest {
     private CmsCategory category(Long id) {
         CmsCategory value = new CmsCategory();
         value.setId(id);
+        value.setSiteId(1L);
         value.setCode("news");
         return value;
     }

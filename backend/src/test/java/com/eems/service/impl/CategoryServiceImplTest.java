@@ -7,7 +7,10 @@ import com.eems.dto.CategorySaveRequest;
 import com.eems.entity.CmsCategory;
 import com.eems.mapper.CmsCategoryMapper;
 import com.eems.mapper.CmsContentMapper;
+import com.eems.site.SiteContextTestSupport;
 import com.eems.vo.CategoryVO;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -26,6 +29,12 @@ class CategoryServiceImplTest {
     private final CmsContentMapper contentMapper = mock(CmsContentMapper.class);
     private final CategoryServiceImpl service = new CategoryServiceImpl(mapper, contentMapper);
 
+    @BeforeEach
+    void selectSite() { SiteContextTestSupport.selectDefaultSite(); }
+
+    @AfterEach
+    void clearSite() { SiteContextTestSupport.clear(); }
+
     @Test
     void treeShouldBuildNestedCategories() {
         CmsCategory root = category(1L, 0L, "新闻", "news");
@@ -42,7 +51,7 @@ class CategoryServiceImplTest {
 
     @Test
     void createShouldRejectDuplicateCode() {
-        when(mapper.selectIncludingDeletedByCode("news"))
+        when(mapper.selectIncludingDeletedByCode("news", 1L))
                 .thenReturn(category(3L, 0L, "已存在", "news"));
 
         BusinessException exception = assertThrows(BusinessException.class,
@@ -56,12 +65,26 @@ class CategoryServiceImplTest {
     void createShouldTellUserToRestoreDeletedCategory() {
         CmsCategory deleted = category(4L, 2L, "行业新闻", "industry-news");
         deleted.setDeleted(1);
-        when(mapper.selectIncludingDeletedByCode("industry-news")).thenReturn(deleted);
+        when(mapper.selectIncludingDeletedByCode("industry-news", 1L)).thenReturn(deleted);
 
         BusinessException exception = assertThrows(BusinessException.class,
                 () -> service.create(request("industry-news")));
 
         assertEquals("CATEGORY_CODE_DELETED", exception.getCode());
+        verify(mapper, never()).insert(any(CmsCategory.class));
+    }
+
+    @Test
+    void createShouldRejectParentReturnedFromAnotherSite() {
+        CmsCategory parent = category(9L, 0L, "Other site", "other");
+        parent.setSiteId(2L);
+        when(mapper.selectById(9L)).thenReturn(parent);
+        CategorySaveRequest request = request("child");
+        request.setParentId(9L);
+
+        BusinessException exception = assertThrows(BusinessException.class, () -> service.create(request));
+
+        assertEquals("CATEGORY_PARENT_NOT_FOUND", exception.getCode());
         verify(mapper, never()).insert(any(CmsCategory.class));
     }
 
@@ -228,6 +251,7 @@ class CategoryServiceImplTest {
     private CmsCategory category(Long id, Long parentId, String name, String code) {
         CmsCategory value = new CmsCategory();
         value.setId(id);
+        value.setSiteId(1L);
         value.setParentId(parentId);
         value.setName(name);
         value.setCode(code);

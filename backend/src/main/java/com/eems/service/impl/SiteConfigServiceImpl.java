@@ -10,6 +10,7 @@ import com.eems.mapper.SiteConfigMapper;
 import com.eems.mapper.ExhibitionMapper;
 import com.eems.service.SiteConfigService;
 import com.eems.service.OperationLogService;
+import com.eems.site.SiteContext;
 import com.eems.vo.SiteConfigVO;
 import com.eems.vo.PublicSiteVO;
 import org.springframework.stereotype.Service;
@@ -87,7 +88,8 @@ public class SiteConfigServiceImpl implements SiteConfigService {
             return;
         }
         boolean exists = exhibitionMapper.selectCount(Wrappers.<Exhibition>lambdaQuery()
-                .eq(Exhibition::getId, exhibitionId)) > 0;
+                .eq(Exhibition::getId, exhibitionId)
+                .eq(Exhibition::getSiteId, SiteContext.requireSiteId())) > 0;
         if (!exists) {
             throw new BusinessException("EXHIBITION_NOT_FOUND", "当前主展会不存在或已删除");
         }

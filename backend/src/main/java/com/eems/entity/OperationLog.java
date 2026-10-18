@@ -1,6 +1,9 @@
 package com.eems.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.FieldFill;
+import com.baomidou.mybatisplus.annotation.FieldStrategy;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
@@ -9,6 +12,7 @@ import java.time.LocalDateTime;
 @TableName("operation_log")
 public class OperationLog {
     @TableId(type = IdType.AUTO) private Long id;
+    @TableField(fill = FieldFill.INSERT, updateStrategy = FieldStrategy.NEVER) private Long siteId;
     private Long adminUserId;
     private String username;
     private String module;
@@ -23,6 +27,7 @@ public class OperationLog {
     private LocalDateTime updatedAt;
     @TableLogic private Integer deleted;
     public Long getId() { return id; } public void setId(Long v) { id = v; }
+    public Long getSiteId() { return siteId; } public void setSiteId(Long v) { siteId = v; }
     public Long getAdminUserId() { return adminUserId; } public void setAdminUserId(Long v) { adminUserId = v; }
     public String getUsername() { return username; } public void setUsername(String v) { username = v; }
     public String getModule() { return module; } public void setModule(String v) { module = v; }

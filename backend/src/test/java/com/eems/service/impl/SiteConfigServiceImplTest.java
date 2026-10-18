@@ -5,6 +5,9 @@ import com.eems.entity.SiteConfig;
 import com.eems.mapper.ExhibitionMapper;
 import com.eems.mapper.SiteConfigMapper;
 import com.eems.common.exception.BusinessException;
+import com.eems.site.SiteContextTestSupport;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
@@ -16,6 +19,12 @@ import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.never;
 
 class SiteConfigServiceImplTest {
+    @BeforeEach
+    void selectSite() { SiteContextTestSupport.selectDefaultSite(); }
+
+    @AfterEach
+    void clearSite() { SiteContextTestSupport.clear(); }
+
     @Test
     void updateDefaultShouldUpdateSingletonConfig() {
         SiteConfigMapper mapper = mock(SiteConfigMapper.class);

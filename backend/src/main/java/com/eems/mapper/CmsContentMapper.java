@@ -11,8 +11,8 @@ public interface CmsContentMapper extends BaseMapper<CmsContent> {
     @Select("SELECT COUNT(1) FROM cms_content WHERE category_id = #{categoryId} AND deleted = 0")
     long countActiveByCategoryId(@Param("categoryId") Long categoryId);
 
-    @Select("SELECT id,category_id,exhibition_id,title,slug,cover_url,summary,body,author,source,status," +
+    @Select("SELECT id,site_id,category_id,exhibition_id,title,slug,cover_url,summary,body,author,source,status," +
             "published_at,sort_order,is_top,is_recommend,view_count,extra_data,created_by,updated_by," +
-            "created_at,updated_at,deleted FROM cms_content WHERE slug = #{slug} LIMIT 1")
-    CmsContent selectIncludingDeletedBySlug(@Param("slug") String slug);
+            "created_at,updated_at,deleted FROM cms_content WHERE slug = #{slug} AND site_id = #{siteId} LIMIT 1")
+    CmsContent selectIncludingDeletedBySlug(@Param("slug") String slug, @Param("siteId") Long siteId);
 }

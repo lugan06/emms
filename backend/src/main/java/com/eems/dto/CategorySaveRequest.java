@@ -20,7 +20,7 @@ public class CategorySaveRequest {
 
     @NotBlank
     @Size(max = 100)
-    @Schema(description = "栏目编码，全局唯一", example = "news")
+    @Schema(description = "栏目编码，当前站点内唯一", example = "news")
     private String code;
 
     @Size(max = 150)

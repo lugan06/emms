@@ -12,7 +12,10 @@ import com.eems.mapper.AdminUserMapper;
 import com.eems.mapper.ExhibitionMapper;
 import com.eems.mapper.SiteConfigMapper;
 import com.eems.service.OperationLogService;
+import com.eems.site.SiteContextTestSupport;
 import com.eems.vo.ExhibitionVO;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
@@ -34,6 +37,12 @@ class ExhibitionServiceImplTest {
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final ExhibitionServiceImpl service = new ExhibitionServiceImpl(
             mapper, siteConfigMapper, logService, adminUserMapper, objectMapper);
+
+    @BeforeEach
+    void selectSite() { SiteContextTestSupport.selectDefaultSite(); }
+
+    @AfterEach
+    void clearSite() { SiteContextTestSupport.clear(); }
 
     @Test
     void createShouldRejectEndBeforeStart() {

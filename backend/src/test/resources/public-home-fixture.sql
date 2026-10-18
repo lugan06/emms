@@ -1,11 +1,11 @@
 CREATE TABLE IF NOT EXISTS cms_category (
-    id BIGINT PRIMARY KEY, parent_id BIGINT DEFAULT 0, name VARCHAR(100), code VARCHAR(100),
+    id BIGINT PRIMARY KEY, site_id BIGINT NOT NULL DEFAULT 1, parent_id BIGINT DEFAULT 0, name VARCHAR(100), code VARCHAR(100),
     url_name VARCHAR(100), model_code VARCHAR(20), list_template VARCHAR(100), detail_template VARCHAR(100),
     sort_order INT DEFAULT 0, is_enabled INT DEFAULT 1, show_in_nav INT DEFAULT 1, link_url VARCHAR(500),
     created_at TIMESTAMP, updated_at TIMESTAMP, deleted INT DEFAULT 0
 );
 CREATE TABLE IF NOT EXISTS cms_content (
-    id BIGINT PRIMARY KEY, category_id BIGINT, exhibition_id BIGINT, title VARCHAR(200), slug VARCHAR(200),
+    id BIGINT PRIMARY KEY, site_id BIGINT NOT NULL DEFAULT 1, category_id BIGINT, exhibition_id BIGINT, title VARCHAR(200), slug VARCHAR(200),
     cover_url VARCHAR(500), summary VARCHAR(1000), body TEXT, author VARCHAR(100), source VARCHAR(100),
     status VARCHAR(20), published_at TIMESTAMP, sort_order INT DEFAULT 0, is_top INT DEFAULT 0,
     is_recommend INT DEFAULT 0, view_count INT DEFAULT 0, extra_data TEXT, created_by BIGINT,

@@ -8,6 +8,7 @@ import com.eems.dto.CategorySaveRequest;
 import com.eems.entity.CmsCategory;
 import com.eems.mapper.CmsCategoryMapper;
 import com.eems.mapper.CmsContentMapper;
+import com.eems.site.SiteContext;
 import com.eems.service.CategoryService;
 import com.eems.vo.CategoryVO;
 import org.springframework.stereotype.Service;
@@ -205,13 +206,16 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     private void ensureParentExists(Long parentId) {
-        if (parentId != 0 && mapper.selectById(parentId) == null) {
-            throw new BusinessException("CATEGORY_PARENT_NOT_FOUND", "父栏目不存在");
+        if (parentId != 0) {
+            CmsCategory parent = mapper.selectById(parentId);
+            if (parent == null || !SiteContext.requireSiteId().equals(parent.getSiteId())) {
+                throw new BusinessException("CATEGORY_PARENT_NOT_FOUND", "父栏目不存在");
+            }
         }
     }
 
     private void ensureCodeAvailable(String code, Long currentId) {
-        CmsCategory existing = mapper.selectIncludingDeletedByCode(code);
+        CmsCategory existing = mapper.selectIncludingDeletedByCode(code, SiteContext.requireSiteId());
         if (existing == null || existing.getId().equals(currentId)) {
             return;
         }
