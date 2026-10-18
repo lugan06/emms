@@ -33,6 +33,9 @@
           <strong>{{ route.meta.title || '管理后台' }}</strong>
         </div>
         <div class="admin-profile">
+          <div class="current-site" data-testid="current-site">
+            当前站点：{{ userStore.siteName || '未获取' }}
+          </div>
           <div class="profile-copy">
             <strong>{{ userStore.user?.nickname || userStore.user?.username || '管理员' }}</strong>
             <span>{{ userStore.user?.roleCode || 'ADMIN' }}</span>
@@ -235,6 +238,16 @@ function logout(): void {
   gap: 16px;
 }
 
+.current-site {
+  max-width: 280px;
+  overflow: hidden;
+  color: #4b5563;
+  font-size: 13px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .profile-copy {
   display: grid;
   gap: 2px;
@@ -294,6 +307,10 @@ function logout(): void {
 
   .profile-copy {
     text-align: left;
+  }
+
+  .current-site {
+    max-width: 100%;
   }
 }
 </style>

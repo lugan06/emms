@@ -3,6 +3,7 @@ import { createPinia, setActivePinia } from 'pinia'
 
 import { useUserStore } from './user'
 import { authApi } from '@/api/auth'
+import { systemApi } from '@/api/system'
 
 vi.mock('@/api/auth', () => ({
   authApi: {
@@ -13,12 +14,17 @@ vi.mock('@/api/auth', () => ({
     }),
   },
 }))
+vi.mock('@/api/system', () => ({
+  systemApi: { site: vi.fn() },
+}))
 
 describe('user store', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     localStorage.clear()
     vi.mocked(authApi.me).mockReset()
+    vi.mocked(systemApi.site).mockReset()
+    vi.mocked(systemApi.site).mockResolvedValue({ siteTitle: '默认站点' } as never)
   })
 
   it('restores a token from storage', () => {
@@ -38,6 +44,7 @@ describe('user store', () => {
     expect(store.userVerified).toBe(false)
     await store.refreshUser()
     expect(store.user?.roleCode).toBe('EDITOR')
+    expect(store.siteName).toBe('默认站点')
     expect(store.userVerified).toBe(true)
     expect(JSON.parse(localStorage.getItem('eems:admin-user')!).roleCode).toBe('EDITOR')
   })
@@ -62,18 +69,32 @@ describe('user store', () => {
     expect(store.userVerified).toBe(false)
   })
 
+  it('keeps the user verified when the site configuration refresh fails', async () => {
+    localStorage.setItem('eems:access-token', 'stored-token')
+    const store = useUserStore()
+    vi.mocked(authApi.me).mockResolvedValue({ id: 2, username: 'editor', nickname: null, avatarUrl: null, roleCode: 'EDITOR' })
+    vi.mocked(systemApi.site).mockRejectedValue(new Error('site unavailable'))
+
+    await store.refreshUser()
+
+    expect(store.userVerified).toBe(true)
+    expect(store.siteName).toBeNull()
+  })
+
   it('stores the token after login and clears auth', async () => {
     const store = useUserStore()
 
     await store.login({ username: 'admin', password: 'secret' })
     expect(store.token).toBe('new-token')
     expect(store.user?.username).toBe('admin')
+    expect(store.siteName).toBe('默认站点')
     expect(localStorage.getItem('eems:access-token')).toBe('new-token')
 
     store.clearAuth()
     expect(store.token).toBeNull()
     expect(store.isLoggedIn).toBe(false)
     expect(store.user).toBeNull()
+    expect(store.siteName).toBeNull()
     expect(localStorage.getItem('eems:access-token')).toBeNull()
   })
 })

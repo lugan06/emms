@@ -8,9 +8,26 @@ import { getAdminUser, getToken, removeAdminUser, removeToken, setAdminUser, set
 export const useUserStore = defineStore('user', () => {
   const token = ref<string | null>(getToken())
   const user = ref<AdminUser | null>(getAdminUser())
+  const siteName = ref<string | null>(null)
   const isLoggedIn = computed(() => Boolean(token.value))
   const userVerified = ref(false)
   let refreshPromise: Promise<void> | null = null
+  let siteRefreshPromise: Promise<void> | null = null
+
+  async function refreshSite(): Promise<void> {
+    const activeToken = token.value
+    if (!activeToken) {
+      siteName.value = null
+      return
+    }
+    if (!siteRefreshPromise) {
+      siteRefreshPromise = import('@/api/system').then(({ systemApi }) => systemApi.site()).then(result => {
+        if (token.value !== activeToken) return
+        siteName.value = result.siteTitle?.trim() || null
+      }).finally(() => { siteRefreshPromise = null })
+    }
+    await siteRefreshPromise
+  }
 
   async function refreshUser(): Promise<void> {
     if (!refreshPromise) {
@@ -20,6 +37,9 @@ export const useUserStore = defineStore('user', () => {
         user.value = result
         setAdminUser(result)
         userVerified.value = true
+        return refreshSite().catch(() => {
+          if (token.value === activeToken) siteName.value = null
+        })
       }).finally(() => { refreshPromise = null })
     }
     await refreshPromise
@@ -32,6 +52,7 @@ export const useUserStore = defineStore('user', () => {
     token.value = result.token
     user.value = result.user
     userVerified.value = true
+    await refreshSite().catch(() => { siteName.value = null })
   }
 
   function clearAuth(): void {
@@ -39,15 +60,18 @@ export const useUserStore = defineStore('user', () => {
     removeAdminUser()
     token.value = null
     user.value = null
+    siteName.value = null
     userVerified.value = false
   }
 
   return {
     token,
     user,
+    siteName,
     isLoggedIn,
     userVerified,
     refreshUser,
+    refreshSite,
     login,
     clearAuth,
   }

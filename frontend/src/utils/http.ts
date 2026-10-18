@@ -18,6 +18,22 @@ const http = axios.create({
   },
 })
 
+const siteErrorMessages: Record<string, string> = {
+  SITE_ADMIN_FORBIDDEN: '当前域名无管理权限',
+  SITE_DISABLED: '站点已停用',
+  SITE_NOT_FOUND: '当前域名未绑定站点',
+  DEFAULT_SITE_MISSING: '默认站点未配置',
+}
+
+function getErrorCode(payload: ApiErrorPayload | undefined): string | undefined {
+  if (payload?.code === undefined || payload.code === null) return undefined
+  return String(payload.code)
+}
+
+function getDisplayMessage(code: string | undefined, fallback: string): string {
+  return (code && siteErrorMessages[code]) || fallback
+}
+
 async function redirectToLogin(): Promise<void> {
   useUserStore(pinia).clearAuth()
   if (router.currentRoute.value.path !== '/admin/login') {
@@ -46,8 +62,9 @@ http.interceptors.response.use(
       return Promise.reject(new Error(payload.message || 'Unauthorized'))
     }
     if (!['OK', '0', '200', 'SUCCESS'].includes(code)) {
-      ElMessage.error(payload.message || 'Request failed')
-      return Promise.reject(new Error(payload.message || 'Request failed'))
+      const message = getDisplayMessage(code, payload.message || 'Request failed')
+      ElMessage.error(message)
+      return Promise.reject(new Error(message))
     }
     // The interceptor unwraps the envelope at runtime; Axios types model the raw response here.
     return payload.data as never
@@ -57,7 +74,8 @@ http.interceptors.response.use(
       await redirectToLogin()
     }
 
-    const message = error.response?.data?.message ?? error.message ?? 'Network error'
+    const code = getErrorCode(error.response?.data)
+    const message = getDisplayMessage(code, error.response?.data?.message ?? error.message ?? 'Network error')
     ElMessage.error(message)
     return Promise.reject(error)
   },
