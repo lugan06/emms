@@ -13,9 +13,6 @@ const configuredBaseUrl = String(import.meta.env.VITE_API_BASE_URL || '')
 const http = axios.create({
   baseURL: configuredBaseUrl,
   timeout: Number(import.meta.env.VITE_API_TIMEOUT ?? 10000),
-  headers: {
-    'Content-Type': 'application/json',
-  },
 })
 
 const siteErrorMessages: Record<string, string> = {
