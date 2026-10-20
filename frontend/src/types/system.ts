@@ -12,6 +12,7 @@ export interface SiteSaveRequest {
   statisticsCode: string | null
   footerInfo: string | null
   currentExhibitionId: number | null
+  heroVideoUrl: string | null
 }
 export interface AdminSite extends SiteSaveRequest { id: number; configCode: string }
 export interface CompanySaveRequest {

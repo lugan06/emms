@@ -40,7 +40,7 @@ class PublicSiteControllerTest {
     void publicSiteShouldBeReadableWithoutTokenAndHideInternalFields() throws Exception {
         when(siteConfigService.getPublicDefault()).thenReturn(new PublicSiteVO(
                 "EEMS", "Public subtitle", "example.test", "/uploads/logo.png",
-                "coating", "Public description", "沪ICP备00000000号", "Footer"));
+                "coating", "Public description", "沪ICP备00000000号", "Footer", null));
 
         mockMvc.perform(get("/api/public/site"))
                 .andExpect(status().isOk())

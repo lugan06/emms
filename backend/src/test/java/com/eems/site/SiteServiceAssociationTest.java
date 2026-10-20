@@ -87,7 +87,7 @@ class SiteServiceAssociationTest {
     @Test
     void siteConfigRejectsCrossSiteCurrentExhibition() {
         SiteConfigUpdateRequest request = new SiteConfigUpdateRequest("A", null, null, null, null,
-                null, null, null, null, null, 202L);
+                null, null, null, null, null, 202L, null);
 
         assertBusinessCode("EXHIBITION_NOT_FOUND", () -> siteConfigService.updateDefault(request));
         verify(siteConfigMapper, never()).updateById(any(SiteConfig.class));
@@ -112,7 +112,7 @@ class SiteServiceAssociationTest {
         when(siteConfigMapper.selectOne(any())).thenReturn(config);
         when(siteConfigMapper.updateById(any(SiteConfig.class))).thenReturn(1);
         siteConfigService.updateDefault(new SiteConfigUpdateRequest("A", null, null, null, null,
-                null, null, null, null, null, 101L));
+                null, null, null, null, null, 101L, null));
         assertEquals(101L, config.getCurrentExhibitionId());
     }
 

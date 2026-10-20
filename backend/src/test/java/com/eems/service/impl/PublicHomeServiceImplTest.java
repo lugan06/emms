@@ -33,7 +33,7 @@ class PublicHomeServiceImplTest {
 
     @Test
     void homeShouldUseCurrentExhibitionForExhibitionSections() {
-        PublicSiteVO site = new PublicSiteVO("EEMS", null, null, null, null, null, null, null);
+        PublicSiteVO site = new PublicSiteVO("EEMS", null, null, null, null, null, null, null, null);
         PublicCompanyVO company = new PublicCompanyVO("EEMS", null, null, null, null, null, null);
         PublicExhibitionVO exhibition = mock(PublicExhibitionVO.class);
         PublicContentVO content = mock(PublicContentVO.class);

@@ -3,6 +3,9 @@ package com.eems.service.impl;
 import com.eems.common.exception.BusinessException;
 import com.eems.config.FileStorageProperties;
 import com.eems.service.FileStorageService;
+import com.eems.site.SiteContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.web.multipart.MultipartFile;
@@ -10,9 +13,11 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ByteArrayInputStream;
+import java.nio.file.AccessDeniedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
@@ -23,6 +28,7 @@ import java.util.UUID;
 @Service
 @ConditionalOnProperty(name = "eems.file.storage-type", havingValue = "local", matchIfMissing = true)
 public class LocalFileStorageService implements FileStorageService {
+    private static final Logger log = LoggerFactory.getLogger(LocalFileStorageService.class);
     private static final Map<String, String> ALLOWED_TYPES = Map.ofEntries(
             Map.entry("jpg", "image/jpeg"),
             Map.entry("jpeg", "image/jpeg"),
@@ -32,7 +38,8 @@ public class LocalFileStorageService implements FileStorageService {
             Map.entry("doc", "application/msword"),
             Map.entry("docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"),
             Map.entry("xls", "application/vnd.ms-excel"),
-            Map.entry("xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
+            Map.entry("xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
+            Map.entry("mp4", "video/mp4"));
 
     private final FileStorageProperties properties;
     private final Path root;
@@ -69,19 +76,31 @@ public class LocalFileStorageService implements FileStorageService {
         }
         validateFileSignature(file, extension);
 
-        String storageName = UUID.randomUUID() + "." + extension;
+        String storageName = storageName(extension);
         Path target = root.resolve(storageName).normalize();
-        if (!target.getParent().equals(root)) {
+        if (!target.startsWith(root) || target.equals(root)) {
             throw new BusinessException("FILE_NAME_INVALID", "文件名不合法");
         }
 
         try {
-            Files.createDirectories(root);
-            file.transferTo(target);
+            Files.createDirectories(target.getParent());
+            // Stream the upload instead of moving the servlet temp file. The temp directory
+            // and configured storage root can be on different Windows volumes.
+            try (InputStream input = file.getInputStream()) {
+                long copied = Files.copy(input, target, StandardCopyOption.REPLACE_EXISTING);
+                if (copied != file.getSize()) {
+                    throw new IOException("上传文件复制不完整");
+                }
+            }
             String sha256 = sha256(target);
             return new StoredFile(originalName, storageName, buildUrl(storageName), contentType,
                     file.getSize(), sha256);
+        } catch (AccessDeniedException exception) {
+            log.error("文件存储目录无写入权限: root={}, target={}", root, target, exception);
+            deleteQuietly(target);
+            throw new BusinessException("FILE_STORAGE_PERMISSION_DENIED", "文件存储目录无写入权限，请检查 eems.file.local-path 配置和目录权限");
         } catch (IOException exception) {
+            log.error("文件保存失败: originalName={}, target={}", originalName, target, exception);
             deleteQuietly(target);
             throw new BusinessException("FILE_STORAGE_FAILED", "文件保存失败");
         }
@@ -93,7 +112,7 @@ public class LocalFileStorageService implements FileStorageService {
             return;
         }
         Path target = root.resolve(storedFile.storageName()).normalize();
-        if (target.getParent().equals(root)) {
+        if (target.startsWith(root) && !target.equals(root)) {
             deleteQuietly(target);
         }
     }
@@ -114,6 +133,14 @@ public class LocalFileStorageService implements FileStorageService {
 
     private void validateFileSignature(MultipartFile file, String extension) {
         try {
+            if ("mp4".equals(extension)) {
+                try (InputStream input = file.getInputStream()) {
+                    if (!isMp4(input)) {
+                        throw new BusinessException("FILE_CONTENT_NOT_ALLOWED", "文件内容与声明的文件类型不匹配");
+                    }
+                }
+                return;
+            }
             byte[] header = file.getBytes();
             boolean valid = switch (extension) {
                 case "jpg", "jpeg" -> startsWith(header, 0xFF, 0xD8, 0xFF);
@@ -132,6 +159,19 @@ public class LocalFileStorageService implements FileStorageService {
         } catch (IOException exception) {
             throw new BusinessException("FILE_READ_FAILED", "无法读取上传文件");
         }
+    }
+
+    private String storageName(String extension) {
+        String filename = UUID.randomUUID() + "." + extension;
+        if (!"mp4".equals(extension)) {
+            return filename;
+        }
+        return "sites/" + SiteContext.requireSiteId() + "/hero-video/" + filename;
+    }
+
+    private boolean isMp4(InputStream input) throws IOException {
+        byte[] header = input.readNBytes(12);
+        return header.length >= 12 && asciiAt(header, 4, "ftyp");
     }
 
     private boolean isOfficeOpenXml(byte[] content, String expectedEntryPrefix) throws IOException {

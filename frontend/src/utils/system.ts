@@ -14,7 +14,8 @@ export function isAdminMenuActive(path: string, target: string): boolean {
 }
 export function createSiteForm(): SiteSaveRequest {
   return { siteTitle: '', siteSubtitle: null, domain: null, logoUrl: null, keywords: null, description: null,
-    icpNumber: null, templateCode: null, statisticsCode: null, footerInfo: null, currentExhibitionId: null }
+    icpNumber: null, templateCode: null, statisticsCode: null, footerInfo: null, currentExhibitionId: null,
+    heroVideoUrl: null }
 }
 export function createCompanyForm(): CompanySaveRequest {
   return { companyName: '', address: null, postalCode: null, contactName: null, mobile: null,

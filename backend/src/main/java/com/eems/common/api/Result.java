@@ -11,7 +11,7 @@ public class Result<T> {
     @Schema(description = "响应消息", example = "success")
     private String message;
 
-    @Schema(description = "业务数据")
+    @Schema(description = "业务数据，错误响应时为空", nullable = true)
     private T data;
 
     @Schema(description = "链路追踪 ID", nullable = true)

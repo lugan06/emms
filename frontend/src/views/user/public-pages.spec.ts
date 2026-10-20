@@ -24,7 +24,7 @@ const contactCompany: PublicCompany = {
 
 function homeFixture(): PublicHome {
   return {
-    site: { siteTitle: '测试展会', siteSubtitle: null, domain: null, logoUrl: null, keywords: null, description: null, icpNumber: null, footerInfo: null },
+    site: { siteTitle: '测试展会', siteSubtitle: null, domain: null, logoUrl: null, keywords: null, description: null, icpNumber: null, footerInfo: null, heroVideoUrl: null },
     company: contactCompany, currentExhibition: null,
     exhibitionIntro: [], samePeriodActivities: [], exhibitionScope: [], exhibitionNews: [], industryNews: [], exhibitorNews: [],
   }
@@ -60,6 +60,7 @@ afterEach(() => { app?.unmount(); app = undefined; container?.remove() })
 describe('home content sections', () => {
   it('renders the video hero with a cover poster and falls back after a video error', async () => {
     const value = homeFixture()
+    value.site.heroVideoUrl = '/uploads/sites/1/hero-video/test.mp4'
     value.currentExhibition = {
       id: 3, exhibitionCode: 'EEMS-2027', title: '绿色涂料展', subtitle: null,
       year: 2027, edition: null, coverUrl: '/uploads/exhibitions/hero-cover.jpg',
@@ -77,7 +78,7 @@ describe('home content sections', () => {
     expect(video.muted || video.defaultMuted).toBe(true)
     expect(video.hasAttribute('loop')).toBe(true)
     expect(video.hasAttribute('playsinline')).toBe(true)
-    expect(video.querySelector('source')?.getAttribute('src')).toBe('/videos/zhidonghua-b.mp4')
+    expect(video.querySelector('source')?.getAttribute('src')).toBe('/uploads/sites/1/hero-video/test.mp4')
     expect(container.querySelector<HTMLElement>('.hero-poster')?.style.backgroundImage).toContain('hero-cover.jpg')
 
     video.dispatchEvent(new Event('canplay'))
@@ -86,6 +87,15 @@ describe('home content sections', () => {
     video.dispatchEvent(new Event('error'))
     await vi.waitFor(() => expect(container.querySelector('.hero-video')).toBeNull())
     expect(container.querySelector<HTMLElement>('.hero-poster')?.style.backgroundImage).toContain('hero-cover.jpg')
+  })
+
+  it('does not render a hero video when the site has no configured video', async () => {
+    home.mockResolvedValue(homeFixture())
+    await mount(HomeView)
+
+    await vi.waitFor(() => expect(container.textContent).toContain('测试展会'))
+    expect(container.querySelector('.hero-video')).toBeNull()
+    expect(container.querySelector('.hero-poster')).not.toBeNull()
   })
 
   it('renders returned introduction and scope and stores the site information', async () => {

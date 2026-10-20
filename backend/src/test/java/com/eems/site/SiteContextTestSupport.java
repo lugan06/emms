@@ -5,7 +5,11 @@ public final class SiteContextTestSupport {
     }
 
     public static void selectDefaultSite() {
-        SiteContext.setSiteId(1L);
+        selectSite(1L);
+    }
+
+    public static void selectSite(long siteId) {
+        SiteContext.setSiteId(siteId);
     }
 
     public static void clear() {

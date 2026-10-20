@@ -7,6 +7,10 @@ import com.eems.service.FileAssetService;
 import com.eems.vo.FileAssetVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -34,7 +38,16 @@ public class FileAssetController {
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @Operation(summary = "上传文件", description = "上传图片或常用文档，返回文件资源 ID 和访问地址")
+    @Operation(summary = "上传文件", description = "上传图片、常用文档或 MP4 视频，返回文件资源 ID 和访问地址")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "上传成功"),
+            @ApiResponse(responseCode = "400", description = "文件为空、超过大小限制、类型或内容不合法，或文件存储目录不可写",
+                    content = @Content(schema = @Schema(ref = "#/components/schemas/ResultVoid"))),
+            @ApiResponse(responseCode = "401", description = "未登录",
+                    content = @Content(schema = @Schema(ref = "#/components/schemas/ResultVoid"))),
+            @ApiResponse(responseCode = "500", description = "服务器内部错误",
+                    content = @Content(schema = @Schema(ref = "#/components/schemas/ResultVoid")))
+    })
     public Result<FileAssetVO> upload(
             @Parameter(description = "待上传文件", required = true)
             @RequestPart("file") MultipartFile file,

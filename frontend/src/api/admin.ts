@@ -1,4 +1,5 @@
 import { http } from '@/utils/http'
+import type { AxiosProgressEvent } from 'axios'
 import type {
   AdminExhibition,
   AdminExhibitionPage,
@@ -36,11 +37,16 @@ export const adminApi = {
     return http.post<AdminExhibition, AdminExhibition>(`/api/admin/exhibitions/${id}/offline`)
   },
 
-  uploadFile(file: File): Promise<AdminFile> {
+  uploadFile(file: File, onProgress?: (percent: number) => void): Promise<AdminFile> {
     const formData = new FormData()
     formData.append('file', file)
     return http.post<AdminFile, AdminFile>('/api/admin/files', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
+      timeout: 10 * 60 * 1000,
+      maxContentLength: Infinity,
+      maxBodyLength: Infinity,
+      onUploadProgress: (event: AxiosProgressEvent) => {
+        if (event.total) onProgress?.(Math.min(100, Math.round((event.loaded / event.total) * 100)))
+      },
     })
   },
 }

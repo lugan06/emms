@@ -24,6 +24,7 @@
           playsinline
           preload="metadata"
           :poster="heroCoverUrl || undefined"
+          :key="heroVideoSource"
           aria-hidden="true"
           @canplay="handleVideoCanPlay"
           @error="handleVideoError"
@@ -111,7 +112,6 @@ const heroVideo = ref<HTMLVideoElement | null>(null)
 const videoReady = ref(false)
 const videoFailed = ref(false)
 const prefersStaticHero = ref(false)
-const heroVideoSource = '/videos/zhidonghua-b.mp4'
 let heroMediaQueries: MediaQueryList[] = []
 
 const heroCoverUrl = computed(() => {
@@ -125,7 +125,12 @@ const heroPosterStyle = computed(() => {
   return { backgroundImage: `url("${safeUrl}")` }
 })
 
-const videoAllowed = computed(() => !prefersStaticHero.value && !videoFailed.value)
+const heroVideoSource = computed(() => {
+  const videoUrl = home.value?.site.heroVideoUrl
+  return videoUrl ? resolveAssetUrl(videoUrl) : ''
+})
+
+const videoAllowed = computed(() => Boolean(heroVideoSource.value) && !prefersStaticHero.value && !videoFailed.value)
 
 const contentSections = computed(() => {
   if (!home.value) return []

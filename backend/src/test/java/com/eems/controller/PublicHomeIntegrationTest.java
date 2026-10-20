@@ -43,7 +43,7 @@ class PublicHomeIntegrationTest {
     @BeforeEach
     void configureCurrentExhibition() {
         when(siteConfigService.getCurrentExhibitionId()).thenReturn(1L);
-        when(siteConfigService.getPublicDefault()).thenReturn(new PublicSiteVO("测试展会", null, null, null, null, null, null, null));
+        when(siteConfigService.getPublicDefault()).thenReturn(new PublicSiteVO("测试展会", null, null, null, null, null, null, null, null));
         when(companyProfileService.getPublicDefault()).thenReturn(new PublicCompanyVO("测试公司", null, null, null, null, null, null));
         Exhibition exhibition = new Exhibition();
         exhibition.setId(1L);
@@ -144,7 +144,16 @@ class PublicHomeIntegrationTest {
                 .andExpect(jsonPath("$.components.schemas.PublicHomeVO.properties.exhibitorNews.type").value("array"))
                 .andExpect(jsonPath("$.components.schemas.PublicHomeVO.properties.exhibitionIntro.items['$ref']").value("#/components/schemas/PublicContentVO"))
                 .andExpect(jsonPath("$.components.schemas.PublicContentVO.properties.body.type").value("string"))
-                .andExpect(jsonPath("$.components.schemas.PublicContentVO.properties.body.description").value("富文本正文"));
+                .andExpect(jsonPath("$.components.schemas.PublicContentVO.properties.body.description").value("富文本正文"))
+                .andExpect(jsonPath("$.components.schemas.PublicSiteVO.properties.heroVideoUrl.description")
+                        .value("首页宣传视频地址，仅返回当前站点的视频地址"))
+                .andExpect(jsonPath("$.components.schemas.SiteConfigVO.properties.heroVideoUrl.description")
+                        .value("首页宣传视频地址，仅允许当前站点上传的 MP4 地址"))
+                .andExpect(jsonPath("$.components.schemas.SiteConfigUpdateRequest.properties.heroVideoUrl.description")
+                        .value("首页宣传视频地址，必须为当前站点上传的 MP4 地址"))
+                .andExpect(jsonPath("$.paths['/api/admin/files'].post.responses['400'].content['*/*'].schema['$ref']")
+                        .value("#/components/schemas/ResultVoid"))
+                .andExpect(jsonPath("$.components.schemas.ResultVoid.properties.data.nullable").value(true));
         mockMvc.perform(get("/v3/api-docs"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.components.schemas.CategorySaveRequest.properties.code.description")

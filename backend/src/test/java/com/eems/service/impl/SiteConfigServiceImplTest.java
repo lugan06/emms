@@ -39,12 +39,13 @@ class SiteConfigServiceImplTest {
         SiteConfigServiceImpl service = new SiteConfigServiceImpl(mapper, exhibitionMapper);
         when(mapper.updateById(any(SiteConfig.class))).thenReturn(1);
         service.updateDefault(new SiteConfigUpdateRequest("New title", null, null, null, null,
-                null, null, null, null, null, 2L));
+                null, null, null, null, null, 2L, "/uploads/sites/1/hero-video/test.mp4"));
 
         ArgumentCaptor<SiteConfig> captor = ArgumentCaptor.forClass(SiteConfig.class);
         verify(mapper).updateById(captor.capture());
         assertEquals("New title", captor.getValue().getSiteTitle());
         assertEquals(2L, captor.getValue().getCurrentExhibitionId());
+        assertEquals("/uploads/sites/1/hero-video/test.mp4", captor.getValue().getHeroVideoUrl());
     }
 
     @Test
@@ -58,9 +59,26 @@ class SiteConfigServiceImplTest {
         BusinessException exception = org.junit.jupiter.api.Assertions.assertThrows(
                 BusinessException.class,
                 () -> service.updateDefault(new SiteConfigUpdateRequest("Title", null, null, null, null,
-                        null, null, null, null, null, 44L)));
+                        null, null, null, null, null, 44L, null)));
 
         assertEquals("EXHIBITION_NOT_FOUND", exception.getCode());
+        verify(mapper, never()).updateById(any(SiteConfig.class));
+    }
+
+    @Test
+    void updateDefaultShouldRejectAnotherSitesHeroVideoUrl() {
+        SiteConfigMapper mapper = mock(SiteConfigMapper.class);
+        ExhibitionMapper exhibitionMapper = mock(ExhibitionMapper.class);
+        when(mapper.selectOne(any())).thenReturn(new SiteConfig());
+
+        SiteConfigServiceImpl service = new SiteConfigServiceImpl(mapper, exhibitionMapper);
+        BusinessException exception = org.junit.jupiter.api.Assertions.assertThrows(
+                BusinessException.class,
+                () -> service.updateDefault(new SiteConfigUpdateRequest("Title", null, null, null, null,
+                        null, null, null, null, null, null,
+                        "/uploads/sites/2/hero-video/other.mp4")));
+
+        assertEquals("HERO_VIDEO_URL_INVALID", exception.getCode());
         verify(mapper, never()).updateById(any(SiteConfig.class));
     }
 }

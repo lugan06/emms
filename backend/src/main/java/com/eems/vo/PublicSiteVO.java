@@ -12,11 +12,13 @@ public record PublicSiteVO(
         @Schema(description = "SEO 关键词", nullable = true) String keywords,
         @Schema(description = "SEO 描述", nullable = true) String description,
         @Schema(description = "ICP备案号", nullable = true) String icpNumber,
-        @Schema(description = "页脚公开信息", nullable = true) String footerInfo) {
+        @Schema(description = "页脚公开信息", nullable = true) String footerInfo,
+        @Schema(description = "首页宣传视频地址，仅返回当前站点的视频地址", nullable = true)
+        String heroVideoUrl) {
 
     public static PublicSiteVO from(SiteConfig value) {
         return new PublicSiteVO(value.getSiteTitle(), value.getSiteSubtitle(), value.getDomain(),
                 value.getLogoUrl(), value.getKeywords(), value.getDescription(), value.getIcpNumber(),
-                value.getFooterInfo());
+                value.getFooterInfo(), value.getHeroVideoUrl());
     }
 }

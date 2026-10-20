@@ -16,5 +16,7 @@ public record SiteConfigUpdateRequest(
         @Size(max = 100) @Schema(description = "模板编码") String templateCode,
         @Schema(description = "统计代码") String statisticsCode,
         @Schema(description = "页脚信息") String footerInfo,
-        @Schema(description = "当前主展会 ID") Long currentExhibitionId) {
+        @Schema(description = "当前主展会 ID") Long currentExhibitionId,
+        @Size(max = 500) @Schema(description = "首页宣传视频地址，必须为当前站点上传的 MP4 地址", nullable = true)
+        String heroVideoUrl) {
 }

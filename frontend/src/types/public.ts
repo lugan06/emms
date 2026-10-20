@@ -17,6 +17,7 @@ export interface PublicSite {
   description: string | null
   icpNumber: string | null
   footerInfo: string | null
+  heroVideoUrl: string | null
 }
 
 export interface PublicCompany {

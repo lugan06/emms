@@ -40,10 +40,10 @@ class AdminConfigurationControllerTest {
     void siteEndpointsShouldReadAndUpdateDefaultConfig() throws Exception {
         when(siteConfigService.getDefault()).thenReturn(new SiteConfigVO(
                 1L, "default", null, "EEMS", null, null, null, null,
-                null, null, null, null, null));
+                null, null, null, null, null, null));
         when(siteConfigService.updateDefault(any(), any())).thenReturn(new SiteConfigVO(
                 1L, "default", null, "Updated EEMS", null, null, null, null,
-                null, null, null, null, null));
+                null, null, null, null, null, null));
 
         mockMvc.perform(get("/api/admin/site"))
                 .andExpect(status().isOk())

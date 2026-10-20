@@ -55,11 +55,22 @@ describe('adminApi', () => {
     post.mockResolvedValueOnce({ id: 8, fileUrl: '/uploads/cover.png' })
     const file = new File(['cover'], 'cover.png', { type: 'image/png' })
 
-    await adminApi.uploadFile(file)
+    const progress = vi.fn()
+    await adminApi.uploadFile(file, progress)
 
-    const [path, body, config] = post.mock.calls.at(-1) as [string, FormData, { headers: Record<string, string> }]
+    const [path, body, config] = post.mock.calls.at(-1) as [string, FormData, {
+      timeout: number
+      maxContentLength: number
+      maxBodyLength: number
+      onUploadProgress: (event: unknown) => void
+    }]
     expect(path).toBe('/api/admin/files')
     expect(body.get('file')).toBe(file)
-    expect(config.headers['Content-Type']).toBe('multipart/form-data')
+    expect(config.timeout).toBe(10 * 60 * 1000)
+    expect(config.maxContentLength).toBe(Infinity)
+    expect(config.maxBodyLength).toBe(Infinity)
+    expect(config.onUploadProgress).toBeTypeOf('function')
+    config.onUploadProgress({ loaded: 50, total: 100 })
+    expect(progress).toHaveBeenCalledWith(50)
   })
 })

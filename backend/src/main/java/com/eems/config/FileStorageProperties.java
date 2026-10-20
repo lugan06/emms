@@ -9,7 +9,7 @@ public class FileStorageProperties {
     private String storageType = "local";
     private String localPath;
     private String publicUrlPrefix = "/uploads";
-    private long maxFileSizeBytes = 10 * 1024 * 1024;
+    private long maxFileSizeBytes = 200 * 1024 * 1024;
 
     public String getStorageType() { return storageType; }
     public void setStorageType(String storageType) { this.storageType = storageType; }

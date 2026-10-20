@@ -47,7 +47,7 @@ class AdminConfigurationSecurityTest {
     void superAdminShouldUpdateSiteConfig() throws Exception {
         when(siteConfigService.updateDefault(any())).thenReturn(new SiteConfigVO(
                 1L, "default", null, "Updated", null, null, null, null,
-                null, null, null, null, null));
+                null, null, null, null, null, null));
 
         mockMvc.perform(put("/api/admin/site")
                         .with(user("admin").roles("SUPER_ADMIN"))

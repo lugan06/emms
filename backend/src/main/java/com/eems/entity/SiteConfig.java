@@ -18,6 +18,7 @@ public class SiteConfig {
     private Long siteId;
     private String configCode;
     private Long currentExhibitionId;
+    private String heroVideoUrl;
     private String siteTitle;
     private String siteSubtitle;
     private String domain;
@@ -41,6 +42,8 @@ public class SiteConfig {
     public void setConfigCode(String configCode) { this.configCode = configCode; }
     public Long getCurrentExhibitionId() { return currentExhibitionId; }
     public void setCurrentExhibitionId(Long currentExhibitionId) { this.currentExhibitionId = currentExhibitionId; }
+    public String getHeroVideoUrl() { return heroVideoUrl; }
+    public void setHeroVideoUrl(String heroVideoUrl) { this.heroVideoUrl = heroVideoUrl; }
     public String getSiteTitle() { return siteTitle; }
     public void setSiteTitle(String siteTitle) { this.siteTitle = siteTitle; }
     public String getSiteSubtitle() { return siteSubtitle; }

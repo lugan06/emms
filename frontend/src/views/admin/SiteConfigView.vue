@@ -18,7 +18,8 @@
         <el-form-item label="ICP 备案号"><el-input v-model="form.icpNumber" maxlength="100" /></el-form-item>
         <el-form-item label="模板编码"><el-input v-model="form.templateCode" maxlength="100" /></el-form-item>
       </div>
-      <el-form-item label="站点 Logo"><CoverImageUpload v-model="form.logoUrl" :disabled="saving || !canSave" @uploading-change="uploading = $event" /></el-form-item>
+      <el-form-item label="站点 Logo"><CoverImageUpload v-model="form.logoUrl" :disabled="saving || !canSave" @uploading-change="logoUploading = $event" /></el-form-item>
+      <el-form-item label="首页宣传视频"><HeroVideoUpload v-model="form.heroVideoUrl" :disabled="saving || !canSave" @uploading-change="heroVideoUploading = $event" /></el-form-item>
       <el-form-item label="SEO 关键词"><el-input v-model="form.keywords" maxlength="500" /></el-form-item>
       <el-form-item label="SEO 描述"><el-input v-model="form.description" type="textarea" :rows="3" /></el-form-item>
       <el-form-item label="统计代码"><el-input v-model="form.statisticsCode" type="textarea" :rows="4" placeholder="仅保存代码，不在管理页面执行" /></el-form-item>
@@ -38,13 +39,15 @@ import { useUserStore } from '@/stores/user'
 import type { AdminExhibition } from '@/types/admin'
 import type { SiteSaveRequest } from '@/types/system'
 import CoverImageUpload from '@/components/admin/CoverImageUpload.vue'
+import HeroVideoUpload from '@/components/admin/HeroVideoUpload.vue'
 
 const user = useUserStore()
 const canSave = computed(() => isSuperAdmin(user.user))
 const form = reactive(createSiteForm())
 const formRef = ref<FormInstance>()
 const exhibitions = ref<AdminExhibition[]>([])
-const loading = ref(true), error = ref(false), saving = ref(false), uploading = ref(false)
+const loading = ref(true), error = ref(false), saving = ref(false), logoUploading = ref(false), heroVideoUploading = ref(false)
+const uploading = computed(() => logoUploading.value || heroVideoUploading.value)
 const unavailableCurrent = computed(() => form.currentExhibitionId !== null && !exhibitions.value.some(item => item.id === form.currentExhibitionId))
 const rules: FormRules<SiteSaveRequest> = {
   siteTitle: [{ required: true, whitespace: true, message: '请输入站点标题', trigger: 'blur' }],

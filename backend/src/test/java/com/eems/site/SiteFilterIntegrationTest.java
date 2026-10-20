@@ -34,7 +34,7 @@ class SiteFilterIntegrationTest {
         jdbc.update("INSERT INTO site (id, name, code, status) VALUES (2, 'Second site', 'second', 'ENABLED')");
         jdbc.update("INSERT INTO site_domain (id, site_id, domain, is_primary) VALUES (3, 2, 'b.example', 1)");
         when(siteConfigService.getPublicDefault()).thenAnswer(invocation -> new PublicSiteVO(
-                "site-" + SiteContext.requireSiteId(), null, null, null, null, null, null, null));
+                "site-" + SiteContext.requireSiteId(), null, null, null, null, null, null, null, null));
     }
 
     @Test

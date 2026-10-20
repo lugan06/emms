@@ -10,8 +10,8 @@ spring:
       write-dates-as-timestamps: false
   servlet:
     multipart:
-      max-file-size: ${FILE_MAX_SIZE:10MB}
-      max-request-size: ${FILE_MAX_REQUEST_SIZE:10MB}
+      max-file-size: ${FILE_MAX_SIZE:200MB}
+      max-request-size: ${FILE_MAX_REQUEST_SIZE:200MB}
 
 springdoc:
   api-docs:
@@ -25,6 +25,8 @@ server:
   port: 8080
   servlet:
     context-path: /
+  tomcat:
+    max-swallow-size: -1
 
 mybatis-plus:
   mapper-locations: classpath:/mapper/**/*.xml
@@ -45,7 +47,7 @@ eems:
     storage-type: ${FILE_STORAGE_TYPE:local}
     local-path: ${FILE_LOCAL_PATH:}
     public-url-prefix: ${FILE_PUBLIC_URL_PREFIX:/uploads}
-    max-file-size-bytes: ${FILE_MAX_SIZE_BYTES:10485760}
+    max-file-size-bytes: ${FILE_MAX_SIZE_BYTES:209715200}
   seed:
     admin:
       enabled: ${EEMS_SEED_ADMIN_ENABLED:false}
