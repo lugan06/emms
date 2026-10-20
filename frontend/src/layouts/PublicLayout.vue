@@ -15,6 +15,8 @@
       <RouterView />
     </main>
 
+    <FloatingContact />
+
     <footer class="user-footer">
       <div class="footer-inner">
         <div>
@@ -38,6 +40,7 @@ import { onMounted } from 'vue'
 import { RouterLink, RouterView } from 'vue-router'
 
 import PublicCategoryNavigation from '@/components/public/PublicCategoryNavigation.vue'
+import FloatingContact from '@/components/public/FloatingContact.vue'
 import SiteLogo from '@/components/public/SiteLogo.vue'
 import { usePublicStore } from '@/stores/public'
 

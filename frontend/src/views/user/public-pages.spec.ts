@@ -80,7 +80,6 @@ describe('home content sections', () => {
     expect(video.hasAttribute('playsinline')).toBe(true)
     expect(video.querySelector('source')?.getAttribute('src')).toBe('/uploads/sites/1/hero-video/test.mp4')
     expect(container.querySelector<HTMLElement>('.hero-poster')?.style.backgroundImage).toContain('hero-cover.jpg')
-
     video.dispatchEvent(new Event('canplay'))
     await vi.waitFor(() => expect(video.classList.contains('is-ready')).toBe(true))
 
@@ -96,6 +95,28 @@ describe('home content sections', () => {
     await vi.waitFor(() => expect(container.textContent).toContain('测试展会'))
     expect(container.querySelector('.hero-video')).toBeNull()
     expect(container.querySelector('.hero-poster')).not.toBeNull()
+  })
+
+  it('shows the current exhibition schedule, venue and detail link without repeating its title', async () => {
+    const value = homeFixture()
+    value.currentExhibition = {
+      id: 3, exhibitionCode: 'EEMS-2027', title: '首页右侧标题测试', subtitle: null,
+      year: 2027, edition: null, coverUrl: null, summary: '展会摘要', description: null,
+      venue: '上海国家会展中心（虹桥）', address: null,
+      startAt: '2027-06-16T09:00:00', endAt: '2027-06-18T14:00:00',
+      publishedAt: null, contactName: null, contactPhone: null, registrationUrl: null,
+      showOnHome: 1, homeSort: 1, isCurrent: true,
+    }
+    home.mockResolvedValue(value)
+    await mount(HomeView)
+
+    await vi.waitFor(() => expect(container.querySelector('.hero-detail-link')).not.toBeNull())
+    const exhibitionCopy = container.querySelector('.hero-exhibition-copy')!
+    expect(exhibitionCopy.querySelector('h2')).toBeNull()
+    expect(exhibitionCopy.textContent).not.toContain('首页右侧标题测试')
+    expect(exhibitionCopy.textContent).toContain('2027/06/16 09:00 - 2027/06/18 14:00')
+    expect(exhibitionCopy.textContent).toContain('上海国家会展中心（虹桥）')
+    expect(exhibitionCopy.querySelector('.hero-detail-link')?.getAttribute('href')).toBe('/exhibitions/3')
   })
 
   it('renders returned introduction and scope and stores the site information', async () => {

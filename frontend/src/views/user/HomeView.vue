@@ -38,17 +38,10 @@
             <p class="hero-eyebrow">EEMS EXHIBITION PLATFORM</p>
             <h1>{{ home.site.siteTitle || '展会管理平台' }}</h1>
             <p class="hero-subtitle">{{ home.site.siteSubtitle || home.site.description || '连接品牌、展商与行业伙伴' }}</p>
-            <RouterLink class="hero-action" to="/exhibitions">浏览全部展会 <el-icon><ArrowRight /></el-icon></RouterLink>
           </div>
           <div v-if="home.currentExhibition" class="hero-exhibition">
-            <div v-if="home.currentExhibition.coverUrl" class="hero-image-wrap">
-              <el-image :src="resolveAssetUrl(home.currentExhibition.coverUrl)" :alt="home.currentExhibition.title" fit="cover" class="hero-image">
-                <template #error><div class="hero-image-fallback">EEMS</div></template>
-              </el-image>
-            </div>
             <div class="hero-exhibition-copy">
               <p class="hero-eyebrow">CURRENT EXHIBITION</p>
-              <h2>{{ home.currentExhibition.title }}</h2>
               <p>{{ formatDateRange(home.currentExhibition.startAt, home.currentExhibition.endAt) }}</p>
               <p v-if="home.currentExhibition.venue">{{ home.currentExhibition.venue }}</p>
               <RouterLink :to="`/exhibitions/${home.currentExhibition.id}`" class="hero-detail-link">查看展会详情 <el-icon><ArrowRight /></el-icon></RouterLink>
@@ -67,7 +60,17 @@
           <span>{{ home.currentExhibition.exhibitionCode }}</span>
         </div>
         <div class="current-content">
-          <div>
+          <div v-if="home.currentExhibition.coverUrl" class="current-cover-wrap">
+            <el-image
+              :src="resolveAssetUrl(home.currentExhibition.coverUrl)"
+              :alt="home.currentExhibition.title"
+              fit="cover"
+              class="current-cover"
+            >
+              <template #error><div class="current-cover-fallback">EEMS</div></template>
+            </el-image>
+          </div>
+          <div class="current-info">
             <p class="current-summary">{{ home.currentExhibition.summary || '欢迎了解本届展会的最新信息。' }}</p>
             <dl class="current-meta">
               <div><dt>时间</dt><dd>{{ formatDateRange(home.currentExhibition.startAt, home.currentExhibition.endAt) }}</dd></div>
@@ -324,7 +327,6 @@ onBeforeUnmount(() => {
   line-height: 1.7;
 }
 
-.hero-action,
 .hero-detail-link,
 .outline-link {
   display: inline-flex;
@@ -332,61 +334,31 @@ onBeforeUnmount(() => {
   gap: 8px;
 }
 
-.hero-action {
-  margin-top: 28px;
-  padding: 11px 16px;
-  color: #1e3a5f;
-  font-size: 14px;
-  background: #ffffff;
-  border-radius: 4px;
-}
-
 .hero-exhibition {
   display: flex;
   align-self: center;
+  justify-self: end;
+  width: min(100%, 430px);
   min-height: 250px;
   overflow: hidden;
-  background: #294a70;
-  border: 1px solid rgb(255 255 255 / 20%);
-  border-radius: 6px;
-}
-
-.hero-image-wrap {
-  flex: 0 0 42%;
-}
-
-.hero-image {
-  width: 100%;
-  height: 100%;
-}
-
-.hero-image-fallback {
-  display: grid;
-  width: 100%;
-  height: 100%;
-  min-height: 250px;
-  color: #ffffff;
-  font-size: 28px;
-  font-weight: 700;
-  background: #334155;
-  place-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .hero-exhibition-copy {
   align-self: center;
-  padding: 28px;
-}
-
-.hero-exhibition-copy h2 {
-  margin: 0;
-  font-size: 23px;
-  line-height: 1.35;
+  width: 100%;
+  padding: 32px;
+  text-shadow: 0 1px 8px rgb(0 0 0 / 24%);
 }
 
 .hero-exhibition-copy > p:not(.hero-eyebrow) {
   margin: 10px 0 0;
   color: #dbeafe;
   font-size: 13px;
+  font-weight: 700;
   line-height: 1.5;
 }
 
@@ -394,6 +366,7 @@ onBeforeUnmount(() => {
   margin-top: 18px;
   color: #ffffff;
   font-size: 13px;
+  font-weight: 700;
 }
 
 .hero-empty {
@@ -470,8 +443,50 @@ onBeforeUnmount(() => {
 }
 
 .current-content {
-  align-items: end;
+  align-items: stretch;
   padding-top: 22px;
+}
+
+.current-cover-wrap {
+  flex: 0 0 280px;
+  min-height: 190px;
+  overflow: hidden;
+  border-radius: 6px;
+  background: #e5e7eb;
+}
+
+.current-cover {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 190px;
+  transition: transform 420ms cubic-bezier(0.22, 1, 0.36, 1), filter 220ms ease;
+}
+
+.current-section:hover .current-cover,
+.current-section:focus-within .current-cover {
+  filter: saturate(1.05);
+  transform: scale(1.025);
+}
+
+.current-cover-fallback {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  min-height: 190px;
+  color: #ffffff;
+  font-size: 26px;
+  font-weight: 700;
+  background: #334155;
+  place-items: center;
+}
+
+.current-info {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 .current-summary {
@@ -548,6 +563,10 @@ onBeforeUnmount(() => {
   .hero-exhibition {
     max-width: 600px;
   }
+
+  .current-cover-wrap {
+    flex-basis: 220px;
+  }
 }
 
 @media (max-width: 620px) {
@@ -574,11 +593,21 @@ onBeforeUnmount(() => {
   }
 
   .hero-exhibition {
-    display: block;
+    width: 100%;
   }
 
-  .hero-image-wrap {
-    height: 150px;
+  .current-content {
+    gap: 20px;
+  }
+
+  .current-cover-wrap {
+    flex-basis: 38%;
+    min-height: 160px;
+  }
+
+  .current-cover,
+  .current-cover-fallback {
+    min-height: 160px;
   }
 
   .current-content {
