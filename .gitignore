@@ -28,6 +28,9 @@ pnpm-debug.log*
 # Local project documentation
 /docs/
 
+# Local database scripts
+/database/
+
 # IDE files
 **/.idea/
 **/.vscode/
