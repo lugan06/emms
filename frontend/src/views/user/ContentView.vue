@@ -21,11 +21,9 @@
         </div>
       </header>
 
-      <el-image v-if="content.coverUrl" :src="resolveAssetUrl(content.coverUrl)" :alt="content.title" fit="cover" class="article-cover">
-        <template #error><div class="article-cover-fallback">EEMS</div></template>
-      </el-image>
+      <PublicCoverImage v-if="content.coverUrl" :src="content.coverUrl" :alt="content.title" class="article-cover" />
       <p v-if="content.summary" class="article-summary">{{ content.summary }}</p>
-      <div class="article-body" v-html="content.body || '<p>暂无正文内容。</p>'" />
+      <PublicRichText class="article-body" :html="content.body || '<p>暂无正文内容。</p>'" />
 
       <div class="back-row">
         <el-button :icon="ArrowLeft" @click="goBack">返回栏目</el-button>
@@ -41,9 +39,10 @@ import { useRoute, useRouter } from 'vue-router'
 import { ArrowLeft } from '@element-plus/icons-vue'
 
 import { publicApi } from '@/api/public'
+import PublicCoverImage from '@/components/public/PublicCoverImage.vue'
 import PublicGuestbookForm from '@/components/public/PublicGuestbookForm.vue'
+import PublicRichText from '@/components/public/PublicRichText.vue'
 import type { PublicContent } from '@/types/public'
-import { resolveAssetUrl } from '@/utils/asset'
 import { formatDateTime } from '@/utils/format'
 
 const route = useRoute()
@@ -133,21 +132,11 @@ watch(() => route.params.id, () => {
 .article-cover {
   display: block;
   width: min(100%, 900px);
+  height: auto;
+  min-height: 220px;
   max-height: 420px;
   margin: 32px auto 0;
   border-radius: 6px;
-}
-
-.article-cover-fallback {
-  display: grid;
-  width: min(100%, 900px);
-  min-height: 220px;
-  margin: 32px auto 0;
-  color: #ffffff;
-  font-size: 28px;
-  font-weight: 700;
-  background: #334155;
-  place-items: center;
 }
 
 .article-summary {
@@ -163,26 +152,7 @@ watch(() => route.params.id, () => {
 .article-body {
   width: min(100%, 820px);
   margin: 32px auto 0;
-  color: #374151;
-  font-size: 16px;
   line-height: 2;
-  overflow-wrap: anywhere;
-}
-
-.article-body :deep(h2),
-.article-body :deep(h3) {
-  margin: 28px 0 12px;
-  color: #111827;
-  line-height: 1.4;
-}
-
-.article-body :deep(p) {
-  margin: 0 0 16px;
-}
-
-.article-body :deep(img) {
-  max-width: 100%;
-  height: auto;
 }
 
 .back-row {

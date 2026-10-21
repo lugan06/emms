@@ -5,14 +5,17 @@ import { createMemoryHistory, createRouter } from 'vue-router'
 import ElementPlus from 'element-plus'
 import HomeView from './HomeView.vue'
 import ContactView from './ContactView.vue'
+import ContentView from './ContentView.vue'
+import CategoryContentView from './CategoryContentView.vue'
+import ExhibitionListView from './ExhibitionListView.vue'
 import { usePublicStore } from '@/stores/public'
 import { userRoutes } from '@/router/user'
 import type { PublicCompany, PublicContent, PublicHome } from '@/types/public'
 
-const { home, company, contentDetail } = vi.hoisted(() => ({
-  home: vi.fn(), company: vi.fn(), contentDetail: vi.fn(),
+const { home, company, contentDetail, categoryContents, exhibitions } = vi.hoisted(() => ({
+  home: vi.fn(), company: vi.fn(), contentDetail: vi.fn(), categoryContents: vi.fn(), exhibitions: vi.fn(),
 }))
-vi.mock('@/api/public', () => ({ publicApi: { home, company, contentDetail } }))
+vi.mock('@/api/public', () => ({ publicApi: { home, company, contentDetail, categoryContents, exhibitions } }))
 vi.mock('@/components/public/PublicGuestbookForm.vue', () => ({
   default: { template: '<section id="online-guestbook">在线留言</section>' },
 }))
@@ -58,7 +61,7 @@ beforeEach(() => { vi.resetAllMocks() })
 afterEach(() => { app?.unmount(); app = undefined; container?.remove() })
 
 describe('home content sections', () => {
-  it('renders the video hero with a cover poster and falls back after a video error', async () => {
+  it.each(['video', 'source'])('renders the video hero and retains its cover after a %s error', async errorTarget => {
     const value = homeFixture()
     value.site.heroVideoUrl = '/uploads/sites/1/hero-video/test.mp4'
     value.currentExhibition = {
@@ -83,7 +86,8 @@ describe('home content sections', () => {
     video.dispatchEvent(new Event('canplay'))
     await vi.waitFor(() => expect(video.classList.contains('is-ready')).toBe(true))
 
-    video.dispatchEvent(new Event('error'))
+    const target = errorTarget === 'source' ? video.querySelector('source')! : video
+    target.dispatchEvent(new Event('error'))
     await vi.waitFor(() => expect(container.querySelector('.hero-video')).toBeNull())
     expect(container.querySelector<HTMLElement>('.hero-poster')?.style.backgroundImage).toContain('hero-cover.jpg')
   })
@@ -116,6 +120,8 @@ describe('home content sections', () => {
     expect(exhibitionCopy.textContent).not.toContain('首页右侧标题测试')
     expect(exhibitionCopy.textContent).toContain('2027/06/16 09:00 - 2027/06/18 14:00')
     expect(exhibitionCopy.textContent).toContain('上海国家会展中心（虹桥）')
+    expect(exhibitionCopy.querySelector('.hero-exhibition-date')?.textContent).toContain('2027/06/16')
+    expect(exhibitionCopy.querySelector('.hero-exhibition-venue')?.textContent).toBe('上海国家会展中心（虹桥）')
     expect(exhibitionCopy.querySelector('.hero-detail-link')?.getAttribute('href')).toBe('/exhibitions/3')
   })
 
@@ -139,7 +145,6 @@ describe('home content sections', () => {
 
   it.each([
     ['exhibitionIntro', '展会简介'], ['samePeriodActivities', '同期活动'], ['exhibitionScope', '参展范围'],
-    ['exhibitionNews', '展会动态'], ['industryNews', '行业新闻'], ['exhibitorNews', '展商新闻'],
   ] as const)('automatically displays published content in %s', async (field, title) => {
     const value = homeFixture()
     value[field] = [item(101, '新增公开内容')]
@@ -152,11 +157,45 @@ describe('home content sections', () => {
     expect(container.querySelectorAll('.content-section')).toHaveLength(1)
   })
 
+  it.each([
+    ['exhibitionNews', '展会动态'], ['industryNews', '行业新闻'], ['exhibitorNews', '展商新闻'],
+  ] as const)('shows %s inside the homepage news marquee', async (field, categoryName) => {
+    const value = homeFixture()
+    const newsItem = { ...item(201, `来自${categoryName}的新闻`), categoryName }
+    value[field] = [newsItem]
+    home.mockResolvedValue(value)
+    await mount(HomeView)
+
+    await vi.waitFor(() => expect(container.querySelector('.news-marquee')).not.toBeNull())
+    expect(container.querySelector('.news-marquee')?.textContent).toContain(newsItem.title)
+    expect(container.querySelector('.news-marquee .news-category')?.textContent).toBe(categoryName)
+    expect(container.querySelector('.news-card')?.getAttribute('href')).toBe('/content/201')
+    expect(container.querySelector('.content-section')).toBeNull()
+  })
+
+  it('combines news columns into one seamless marquee and duplicates the sequence for looping', async () => {
+    const value = homeFixture()
+    value.exhibitionNews = [{ ...item(201, '展会动态新闻'), categoryName: '展会动态', coverUrl: '/uploads/news/exhibition.jpg' }]
+    value.industryNews = [{ ...item(202, '行业新闻'), categoryName: '行业新闻' }]
+    value.exhibitorNews = [{ ...item(203, '展商新闻'), categoryName: '展商新闻' }]
+    home.mockResolvedValue(value)
+    await mount(HomeView)
+
+    await vi.waitFor(() => expect(container.querySelectorAll('.news-marquee .news-card')).toHaveLength(8))
+    expect(container.querySelectorAll('.news-marquee .news-group')).toHaveLength(2)
+    expect(container.querySelectorAll('.news-marquee .news-group')[1].getAttribute('aria-hidden')).toBe('true')
+    for (const id of [201, 202, 203]) {
+      expect(container.querySelector(`.news-card[href="/content/${id}"]`)).not.toBeNull()
+    }
+    expect(container.querySelector('.news-card .news-cover img')?.getAttribute('src')).toBe('/uploads/news/exhibition.jpg')
+  })
+
   it('keeps the home page available without displaying empty or missing modules', async () => {
     home.mockResolvedValue(homeFixture())
     await mount(HomeView)
     await vi.waitFor(() => expect(container.textContent).toContain('测试展会'))
     expect(container.querySelectorAll('.content-section')).toHaveLength(0)
+    expect(container.querySelector('.news-marquee')).toBeNull()
     expect(container.textContent).not.toContain('暂无内容')
   })
 
@@ -198,6 +237,37 @@ describe('home content sections', () => {
     container.querySelector<HTMLButtonElement>('button')!.click()
     await vi.waitFor(() => expect(container.textContent).toContain('测试展会'))
     expect(home).toHaveBeenCalledTimes(2)
+  })
+})
+
+describe('shared public page presentation', () => {
+  it('renders article rich text and returns to its category', async () => {
+    contentDetail.mockResolvedValue({
+      ...item(102, '详情页展会简介'), coverUrl: '/uploads/intro.jpg',
+      body: '<h2>亮点</h2><p>完整正文</p><ul><li>机器人</li></ul><table><tbody><tr><td>展馆</td></tr></tbody></table>',
+    })
+    const { router } = await mount(ContentView, '/content/102')
+    await vi.waitFor(() => expect(container.querySelector('.article-body td')?.textContent).toBe('展馆'))
+    expect(container.querySelector('.article-body li')?.textContent).toBe('机器人')
+    expect(container.querySelector('.article-cover img')?.getAttribute('src')).toBe('/uploads/intro.jpg')
+    container.querySelector<HTMLButtonElement>('.back-row button')!.click()
+    await vi.waitFor(() => expect(router.currentRoute.value.path).toBe('/category/exhibition-intro'))
+  })
+
+  it('keeps category headings, empty-cover fallback and article navigation available', async () => {
+    categoryContents.mockResolvedValue({ records: [item(102, '栏目文章')], total: 1, page: 1, pageSize: 10 })
+    const { router } = await mount(CategoryContentView, '/category/exhibition-intro')
+    await vi.waitFor(() => expect(container.querySelector('.page-heading h1')?.textContent).toBe('展会简介'))
+    expect(container.querySelector('.content-cover .cover-placeholder')?.textContent).toBe('EEMS')
+    container.querySelector<HTMLElement>('.content-card')!.click()
+    await vi.waitFor(() => expect(router.currentRoute.value.path).toBe('/content/102'))
+  })
+
+  it('keeps the exhibition list heading and empty state available', async () => {
+    exhibitions.mockResolvedValue({ records: [], total: 0, page: 1, pageSize: 12 })
+    await mount(ExhibitionListView, '/exhibitions')
+    await vi.waitFor(() => expect(container.textContent).toContain('暂无符合条件的展会'))
+    expect(container.querySelector('.page-heading h1')?.textContent).toBe('展会列表')
   })
 })
 

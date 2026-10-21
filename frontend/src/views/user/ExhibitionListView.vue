@@ -1,12 +1,6 @@
 <template>
   <div class="list-view">
-    <header class="page-heading">
-      <div>
-        <p class="eyebrow">EXHIBITIONS</p>
-        <h1>展会列表</h1>
-        <p>浏览已公开的展会信息，按主题和年份快速查找。</p>
-      </div>
-    </header>
+    <PublicPageHeading eyebrow="EXHIBITIONS" title="展会列表" description="浏览已公开的展会信息，按主题和年份快速查找。" />
 
     <section class="filter-bar" aria-label="展会筛选">
       <el-input
@@ -54,6 +48,7 @@ import { onMounted, ref } from 'vue'
 import { Refresh, Search } from '@element-plus/icons-vue'
 
 import PublicExhibitionCard from '@/components/public/PublicExhibitionCard.vue'
+import PublicPageHeading from '@/components/public/PublicPageHeading.vue'
 import { publicApi } from '@/api/public'
 import type { PageResult, PublicExhibition } from '@/types/public'
 
@@ -105,25 +100,6 @@ onMounted(() => {
   gap: 28px;
 }
 
-.page-heading h1 {
-  margin: 0;
-  color: #111827;
-  font-size: 36px;
-}
-
-.page-heading p:last-child {
-  margin: 12px 0 0;
-  color: #6b7280;
-}
-
-.eyebrow {
-  margin: 0 0 8px;
-  color: #2563eb;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-}
-
 .filter-bar {
   display: flex;
   align-items: center;
@@ -166,10 +142,6 @@ onMounted(() => {
 }
 
 @media (max-width: 620px) {
-  .page-heading h1 {
-    font-size: 30px;
-  }
-
   .filter-bar {
     flex-wrap: wrap;
   }

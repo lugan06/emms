@@ -1,6 +1,6 @@
 <template>
   <section class="content-section">
-    <div class="section-heading">
+    <div v-reveal class="section-heading">
       <div>
         <p class="eyebrow">{{ eyebrow }}</p>
         <h2>{{ title }}</h2>
@@ -10,31 +10,32 @@
 
     <el-empty v-if="items.length === 0" :description="emptyText" :image-size="72" />
     <div v-else class="content-grid">
-      <article
+      <div
         v-for="(item, index) in items"
         :key="item.id"
-        class="content-item"
-        :style="{ animationDelay: `${index * 80}ms` }"
+        v-reveal="(index % 4) * 70"
       >
-        <el-image v-if="item.coverUrl" :src="resolveAssetUrl(item.coverUrl)" :alt="item.title" fit="cover" class="content-cover">
-          <template #error><div class="content-cover-fallback">EEMS</div></template>
-        </el-image>
-        <div class="content-copy">
-          <p class="content-date">{{ formatDateTime(item.publishedAt) }}</p>
-          <h3>{{ item.title }}</h3>
-          <p v-if="item.summary" class="content-summary">{{ item.summary }}</p>
-          <div v-if="item.body" class="content-body" v-html="item.body" />
-          <p v-if="item.source" class="content-source">来源：{{ item.source }}</p>
-        </div>
-      </article>
+        <article class="content-item">
+          <PublicCoverImage v-if="item.coverUrl" :src="item.coverUrl" :alt="item.title" class="content-cover" />
+          <div class="content-copy">
+            <p class="content-date">{{ formatDateTime(item.publishedAt) }}</p>
+            <h3>{{ item.title }}</h3>
+            <p v-if="item.summary" class="content-summary">{{ item.summary }}</p>
+            <PublicRichText v-if="item.body" class="content-body" :html="item.body" />
+            <p v-if="item.source" class="content-source">来源：{{ item.source }}</p>
+          </div>
+        </article>
+      </div>
     </div>
   </section>
 </template>
 
 <script setup lang="ts">
 import type { PublicContent } from '@/types/public'
-import { resolveAssetUrl } from '@/utils/asset'
+import { vReveal } from '@/directives/reveal'
 import { formatDateTime } from '@/utils/format'
+import PublicCoverImage from './PublicCoverImage.vue'
+import PublicRichText from './PublicRichText.vue'
 
 withDefaults(
   defineProps<{
@@ -94,10 +95,9 @@ h2 {
   overflow: hidden;
   background: #ffffff;
   border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  box-shadow: 0 2px 8px rgb(15 23 42 / 3%);
-  animation: content-card-in 560ms cubic-bezier(0.22, 1, 0.36, 1) both;
-  transition: border-color 220ms ease, box-shadow 220ms ease, transform 220ms ease;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgb(15 23 42 / 6%);
+  transition: border-color 300ms ease, box-shadow 300ms ease, transform 300ms ease;
 }
 
 .content-item::before {
@@ -116,8 +116,8 @@ h2 {
 .content-item:hover,
 .content-item:focus-within {
   border-color: #93c5fd;
-  box-shadow: 0 14px 30px rgb(37 99 235 / 10%);
-  transform: translateY(-5px);
+  box-shadow: 0 18px 38px rgb(15 23 42 / 12%);
+  transform: translateY(-4px);
 }
 
 .content-item:hover::before,
@@ -137,18 +137,6 @@ h2 {
 .content-item:focus-within .content-cover {
   filter: saturate(1.05);
   transform: scale(1.025);
-}
-
-.content-cover-fallback {
-  display: grid;
-  width: 100%;
-  height: 100%;
-  min-height: 148px;
-  color: #ffffff;
-  font-size: 22px;
-  font-weight: 700;
-  background: #334155;
-  place-items: center;
 }
 
 .content-copy {
@@ -187,23 +175,7 @@ h3 {
 
 .content-body {
   margin-top: 20px;
-  color: #374151;
-  font-size: 16px;
-  line-height: 1.9;
-  overflow-wrap: anywhere;
 }
-
-.content-body :deep(p) { margin: 0 0 16px; }
-.content-body :deep(p:last-child) { margin-bottom: 0; }
-.content-body :deep(img) { max-width: 100%; height: auto; }
-.content-body :deep(h2),
-.content-body :deep(h3) { margin: 24px 0 12px; line-height: 1.4; }
-.content-body :deep(ul),
-.content-body :deep(ol) { padding-left: 24px; }
-.content-body :deep(pre) { white-space: pre-wrap; }
-.content-body :deep(table) { display: block; max-width: 100%; overflow-x: auto; border-collapse: collapse; }
-.content-body :deep(td),
-.content-body :deep(th) { padding: 8px 12px; border: 1px solid #e5e7eb; }
 
 .content-source {
   margin-top: 10px;
@@ -214,24 +186,11 @@ h3 {
   .content-cover { height: 180px; }
 }
 
-@keyframes content-card-in {
-  from {
-    opacity: 0;
-    transform: translateY(14px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .content-item,
   .content-item::before,
   .content-cover,
   h3 {
-    animation: none;
     transition: none;
   }
 }

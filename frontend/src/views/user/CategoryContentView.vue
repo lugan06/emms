@@ -1,12 +1,6 @@
 <template>
   <div class="category-view">
-    <header class="page-heading">
-      <div>
-        <p class="eyebrow">CATEGORY CONTENT</p>
-        <h1>{{ categoryTitle }}</h1>
-        <p>浏览栏目下已发布的展会资讯与内容。</p>
-      </div>
-    </header>
+    <PublicPageHeading eyebrow="CATEGORY CONTENT" :title="categoryTitle" description="浏览栏目下已发布的展会资讯与内容。" />
 
     <section v-if="loading" class="content-list">
       <el-skeleton v-for="index in 4" :key="index" animated class="content-skeleton" />
@@ -25,10 +19,7 @@
           @click="openContent(item.id)"
           @keydown.enter="openContent(item.id)"
         >
-          <el-image v-if="item.coverUrl" :src="resolveAssetUrl(item.coverUrl)" :alt="item.title" fit="cover" class="content-cover">
-            <template #error><div class="content-cover-fallback">EEMS</div></template>
-          </el-image>
-          <div v-else class="content-cover cover-fallback">EEMS</div>
+          <PublicCoverImage :src="item.coverUrl" :alt="item.title" class="content-cover" />
           <div class="content-copy">
             <p class="content-date">{{ formatDateTime(item.publishedAt) }}</p>
             <h2>{{ item.title }}</h2>
@@ -60,8 +51,9 @@ import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { publicApi } from '@/api/public'
+import PublicCoverImage from '@/components/public/PublicCoverImage.vue'
+import PublicPageHeading from '@/components/public/PublicPageHeading.vue'
 import type { PageResult, PublicContentList } from '@/types/public'
-import { resolveAssetUrl } from '@/utils/asset'
 import { formatDateTime } from '@/utils/format'
 
 const route = useRoute()
@@ -112,25 +104,6 @@ watch(categoryCode, () => {
   gap: 28px;
 }
 
-.page-heading h1 {
-  margin: 0;
-  color: #111827;
-  font-size: 36px;
-}
-
-.page-heading p:last-child {
-  margin: 12px 0 0;
-  color: #6b7280;
-}
-
-.eyebrow {
-  margin: 0 0 8px;
-  color: #2563eb;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-}
-
 .content-list {
   display: grid;
   gap: 16px;
@@ -160,28 +133,6 @@ watch(categoryCode, () => {
   width: 100%;
   height: 100%;
   min-height: 170px;
-}
-
-.content-cover-fallback {
-  display: grid;
-  width: 100%;
-  height: 100%;
-  min-height: 170px;
-  color: #ffffff;
-  font-size: 24px;
-  font-weight: 700;
-  background: #334155;
-  place-items: center;
-}
-
-.cover-fallback {
-  display: grid;
-  color: #ffffff;
-  font-size: 28px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  background: #334155;
-  place-items: center;
 }
 
 .content-copy {
@@ -233,10 +184,6 @@ watch(categoryCode, () => {
 }
 
 @media (max-width: 620px) {
-  .page-heading h1 {
-    font-size: 30px;
-  }
-
   .content-card {
     grid-template-columns: 120px minmax(0, 1fr);
   }

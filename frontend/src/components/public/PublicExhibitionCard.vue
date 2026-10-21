@@ -2,17 +2,7 @@
   <article class="exhibition-card">
     <RouterLink :to="`/exhibitions/${exhibition.id}`" class="card-link">
       <div class="cover-wrap">
-        <el-image
-          v-if="exhibition.coverUrl"
-          :src="resolveAssetUrl(exhibition.coverUrl)"
-          :alt="exhibition.title"
-          fit="cover"
-          lazy
-          class="cover"
-        >
-          <template #error><div class="cover-fallback">EEMS</div></template>
-        </el-image>
-        <div v-else class="cover-fallback">EEMS</div>
+        <PublicCoverImage :src="exhibition.coverUrl" :alt="exhibition.title" lazy class="cover" />
         <span v-if="exhibition.isCurrent" class="current-badge">当前展会</span>
       </div>
       <div class="card-body">
@@ -38,8 +28,8 @@
 import { RouterLink } from 'vue-router'
 
 import type { PublicExhibition } from '@/types/public'
-import { resolveAssetUrl } from '@/utils/asset'
 import { formatDateRange } from '@/utils/format'
+import PublicCoverImage from './PublicCoverImage.vue'
 
 defineProps<{
   exhibition: PublicExhibition
@@ -76,18 +66,6 @@ defineProps<{
 .cover {
   width: 100%;
   height: 100%;
-}
-
-.cover-fallback {
-  display: grid;
-  width: 100%;
-  height: 100%;
-  color: #ffffff;
-  font-size: 28px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  background: #334155;
-  place-items: center;
 }
 
 .current-badge {

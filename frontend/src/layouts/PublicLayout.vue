@@ -42,9 +42,12 @@ import { RouterLink, RouterView } from 'vue-router'
 import PublicCategoryNavigation from '@/components/public/PublicCategoryNavigation.vue'
 import FloatingContact from '@/components/public/FloatingContact.vue'
 import SiteLogo from '@/components/public/SiteLogo.vue'
+import { usePublicSmoothScroll } from '@/composables/usePublicSmoothScroll'
 import { usePublicStore } from '@/stores/public'
+import '@/styles/public-motion.css'
 
 const publicStore = usePublicStore()
+usePublicSmoothScroll()
 
 onMounted(() => {
   void publicStore.loadNavigation()
@@ -61,9 +64,10 @@ onMounted(() => {
   position: sticky;
   top: 0;
   z-index: 10;
-  background: rgb(255 255 255 / 96%);
-  border-bottom: 1px solid #e5e7eb;
+  background: rgb(255 255 255 / 80%);
+  border-bottom: 1px solid rgb(148 163 184 / 24%);
   backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .header-inner,

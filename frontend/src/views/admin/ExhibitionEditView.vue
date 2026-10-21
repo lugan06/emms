@@ -303,32 +303,6 @@ watch(() => route.params.id, () => {
   width: 100%;
 }
 
-.cover-field {
-  display: grid;
-  gap: 12px;
-  width: 100%;
-}
-
-.cover-upload-row {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-
-.field-hint {
-  color: #9ca3af;
-  font-size: 12px;
-}
-
-.cover-preview {
-  width: 220px;
-  height: 120px;
-  overflow: hidden;
-  border: 1px solid #e5e7eb;
-  border-radius: 4px;
-}
-
 .form-actions {
   display: flex;
   justify-content: flex-end;
