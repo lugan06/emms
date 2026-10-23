@@ -98,7 +98,9 @@ class PublicContentServiceImplTest {
     @Test
     void detailShouldCleanPublishedBody() {
         CmsContent content = content(10L, 1L, "PUBLISHED");
-        content.setBody("<p>正文</p><script>alert('xss')</script>");
+        content.setBody("<p>正文</p><img src=\"/uploads/image.png\" alt=\"image.png\" "
+                + "onerror=\"alert(1)\"><img src=\"javascript:alert(1)\">"
+                + "<img src=\"//evil.example/image.png\"><script>alert('xss')</script>");
         CmsCategory category = category(1L, 0L, "新闻", "news", 1, 1);
         when(contentMapper.selectOne(any())).thenReturn(content);
         when(categoryMapper.selectById(1L)).thenReturn(category);
@@ -106,6 +108,10 @@ class PublicContentServiceImplTest {
         var result = service.get(10L);
 
         assertFalse(result.body().contains("<script"));
+        assertTrue(result.body().contains("src=\"/uploads/image.png\""));
+        assertFalse(result.body().contains("onerror"));
+        assertFalse(result.body().contains("javascript:"));
+        assertFalse(result.body().contains("//evil.example"));
         assertEquals("news", result.categoryCode());
     }
 
@@ -160,6 +166,7 @@ class PublicContentServiceImplTest {
         when(categoryMapper.selectOne(any())).thenReturn(category(2L, 0L, "展会简介", "exhibition-intro", 1, 1));
         CmsContent content = content(102L, 2L, "PUBLISHED");
         content.setBody("<h2>展会亮点</h2><p>完整正文</p><ul><li>参展范围</li></ul>"
+                + "<img src=\"/uploads/editor-image.png\" alt=\"展会图片\" onerror=\"alert(1)\">"
                 + "<img src=\"https://example.test/exhibition.png\" onerror=\"alert(1)\">"
                 + "<script>alert(1)</script><a href=\"javascript:alert(1)\">链接</a>");
         when(contentMapper.selectList(any())).thenReturn(List.of(content));
@@ -170,6 +177,7 @@ class PublicContentServiceImplTest {
         assertTrue(body.contains("<p>完整正文</p>"));
         assertTrue(body.contains("<li>参展范围</li>"));
         assertTrue(body.contains("https://example.test/exhibition.png"));
+        assertTrue(body.contains("src=\"/uploads/editor-image.png\""));
         assertFalse(body.contains("<script"));
         assertFalse(body.contains("onerror"));
         assertFalse(body.contains("javascript:"));

@@ -22,6 +22,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -84,6 +85,31 @@ class ContentServiceImplTest {
         assertFalse(result.body().contains("<script"));
         assertEquals("DRAFT", result.status());
         verify(logService).success("CMS_CONTENT", "admin", "新增内容", "/api/admin/contents", "{\"id\":10}");
+    }
+
+    @Test
+    void createShouldPreserveRootRelativeUploadedImagesAndRemoveUnsafeHtml() {
+        ContentSaveRequest request = request();
+        request.setBody("<p>正文</p><img src=\"/uploads/image.png\" alt=\"image.png\" "
+                + "onerror=\"alert(1)\"><img src=\"javascript:alert(1)\">"
+                + "<img src=\"//evil.example/image.png\"><script>alert(1)</script>");
+        when(categoryMapper.selectById(2L)).thenReturn(category(2L));
+        when(mapper.selectIncludingDeletedBySlug("news", 1L)).thenReturn(null);
+        when(adminUserMapper.selectOne(any())).thenReturn(null);
+        when(mapper.insert(any(CmsContent.class))).thenAnswer(invocation -> {
+            CmsContent value = invocation.getArgument(0);
+            value.setId(10L);
+            return 1;
+        });
+
+        ContentVO result = service.create(request, "admin");
+
+        assertTrue(result.body().contains("src=\"/uploads/image.png\""));
+        assertTrue(result.body().contains("alt=\"image.png\""));
+        assertFalse(result.body().contains("<script"));
+        assertFalse(result.body().contains("onerror"));
+        assertFalse(result.body().contains("javascript:"));
+        assertFalse(result.body().contains("//evil.example"));
     }
 
     @Test

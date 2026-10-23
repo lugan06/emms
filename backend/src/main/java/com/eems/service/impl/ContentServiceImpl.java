@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.eems.common.api.PageResult;
 import com.eems.common.exception.BusinessException;
+import com.eems.common.util.RichTextSanitizer;
 import com.eems.dto.ContentPageQuery;
 import com.eems.dto.ContentSaveRequest;
 import com.eems.entity.AdminUser;
@@ -18,8 +19,6 @@ import com.eems.service.ContentService;
 import com.eems.service.OperationLogService;
 import com.eems.site.SiteContext;
 import com.eems.vo.ContentVO;
-import org.jsoup.Jsoup;
-import org.jsoup.safety.Safelist;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -32,11 +31,6 @@ public class ContentServiceImpl implements ContentService {
     private static final String PUBLISHED = "PUBLISHED";
     private static final String OFFLINE = "OFFLINE";
     private static final String MODULE = "CMS_CONTENT";
-    private static final Safelist BODY_SAFELIST = Safelist.relaxed()
-            .addTags("img")
-            .addAttributes("img", "src", "alt", "width", "height", "class")
-            .preserveRelativeLinks(false);
-
     private final CmsContentMapper mapper;
     private final CmsCategoryMapper categoryMapper;
     private final ExhibitionMapper exhibitionMapper;
@@ -210,7 +204,7 @@ public class ContentServiceImpl implements ContentService {
     }
 
     private String sanitizeBody(String body) {
-        return StringUtils.hasText(body) ? Jsoup.clean(body, BODY_SAFELIST) : null;
+        return RichTextSanitizer.sanitize(body);
     }
 
     private CmsContent find(Long id) {
