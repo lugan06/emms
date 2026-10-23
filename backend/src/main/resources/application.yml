@@ -41,7 +41,7 @@ mybatis-plus:
 
 eems:
   jwt:
-    secret: ${JWT_SECRET:change-this-local-secret-key-to-a-long-random-value-please}
+    secret: ${JWT_SECRET:}
     access-token-ttl: ${JWT_ACCESS_TOKEN_TTL:7200}
   file:
     storage-type: ${FILE_STORAGE_TYPE:local}
