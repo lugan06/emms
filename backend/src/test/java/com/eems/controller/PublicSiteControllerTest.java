@@ -53,15 +53,15 @@ class PublicSiteControllerTest {
     @Test
     void publicCompanyShouldOnlyExposePublicContactFields() throws Exception {
         when(companyProfileService.getPublicDefault()).thenReturn(new PublicCompanyVO(
-                "EEMS Company", "Shanghai", "200000", "Wang", "021-60000000",
+                "EEMS Company", "Shanghai", "200000", "Wang", "13800138000", "021-60000000",
                 "service@example.test", "/uploads/wechat.png"));
 
         mockMvc.perform(get("/api/public/company"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.companyName").value("EEMS Company"))
+                .andExpect(jsonPath("$.data.mobile").value("13800138000"))
                 .andExpect(jsonPath("$.data.telephone").value("021-60000000"))
                 .andExpect(jsonPath("$.data.businessLicenseNo").doesNotExist())
-                .andExpect(jsonPath("$.data.mobile").doesNotExist())
                 .andExpect(jsonPath("$.data.profileCode").doesNotExist());
     }
 }

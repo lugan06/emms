@@ -43,6 +43,10 @@
             <dt><el-icon><Phone /></el-icon><span>电话</span></dt>
             <dd><a :href="`tel:${publicStore.company.telephone}`">{{ publicStore.company.telephone }}</a></dd>
           </div>
+          <div v-if="publicStore.company.mobile" class="contact-item">
+            <dt><el-icon><Phone /></el-icon><span>手机号</span></dt>
+            <dd><a :href="`tel:${publicStore.company.mobile}`">{{ publicStore.company.mobile }}</a></dd>
+          </div>
           <div v-if="publicStore.company.email" class="contact-item">
             <dt><el-icon><Message /></el-icon><span>邮箱</span></dt>
             <dd><a :href="`mailto:${publicStore.company.email}`">{{ publicStore.company.email }}</a></dd>

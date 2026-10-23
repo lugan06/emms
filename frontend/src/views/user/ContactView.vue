@@ -10,6 +10,7 @@
         <h2>{{ company.companyName }}</h2>
         <dl class="contact-details">
           <div v-if="company.contactName"><dt>联系人</dt><dd>{{ company.contactName }}</dd></div>
+          <div v-if="company.mobile"><dt>手机号</dt><dd><a :href="`tel:${company.mobile}`">{{ company.mobile }}</a></dd></div>
           <div v-if="company.telephone"><dt>联系电话</dt><dd>{{ company.telephone }}</dd></div>
           <div v-if="company.email"><dt>邮箱</dt><dd>{{ company.email }}</dd></div>
           <div v-if="company.address"><dt>地址</dt><dd>{{ company.address }}</dd></div>
@@ -58,6 +59,8 @@ h2 { margin: 0 0 20px; color: #1f2937; font-size: 20px; }
 .contact-details div { display: flex; gap: 20px; }
 dt { flex: 0 0 70px; color: #6b7280; }
 dd { margin: 0; color: #374151; overflow-wrap: anywhere; }
+dd a { color: inherit; text-decoration: none; }
+dd a:hover { color: #2563eb; }
 .wechat-image { width: 160px; height: 160px; margin-top: 24px; }
 .contact-view :deep(.guestbook-section) { width: 100%; padding-bottom: 0; }
 @media (max-width: 620px) { .contact-panel { padding: 24px 18px; } }

@@ -21,7 +21,7 @@ vi.mock('@/components/public/PublicGuestbookForm.vue', () => ({
 }))
 
 const contactCompany: PublicCompany = {
-  companyName: '配置的联系公司', contactName: '联系人甲', telephone: '021-12345678',
+  companyName: '配置的联系公司', contactName: '联系人甲', mobile: '13800138000', telephone: '021-12345678',
   email: 'contact@example.test', address: '配置的联系地址', postalCode: '200000', wechatImageUrl: null,
 }
 
@@ -277,7 +277,7 @@ describe('contact page', () => {
     const { router } = await mount(ContactView, '/contact')
     expect(router.currentRoute.value.name).toBe('public-contact')
     await vi.waitFor(() => expect(container.textContent).toContain(contactCompany.companyName))
-    for (const value of ['联系人甲', '021-12345678', 'contact@example.test', '配置的联系地址', '200000']) {
+    for (const value of ['联系人甲', '13800138000', '021-12345678', 'contact@example.test', '配置的联系地址', '200000']) {
       expect(container.textContent).toContain(value)
     }
     expect(container.textContent).toContain('在线留言')

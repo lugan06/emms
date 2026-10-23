@@ -25,6 +25,7 @@ export interface PublicCompany {
   address: string | null
   postalCode: string | null
   contactName: string | null
+  mobile: string | null
   telephone: string | null
   email: string | null
   wechatImageUrl: string | null

@@ -44,7 +44,7 @@ class PublicHomeIntegrationTest {
     void configureCurrentExhibition() {
         when(siteConfigService.getCurrentExhibitionId()).thenReturn(1L);
         when(siteConfigService.getPublicDefault()).thenReturn(new PublicSiteVO("测试展会", null, null, null, null, null, null, null, null));
-        when(companyProfileService.getPublicDefault()).thenReturn(new PublicCompanyVO("测试公司", null, null, null, null, null, null));
+        when(companyProfileService.getPublicDefault()).thenReturn(new PublicCompanyVO("测试公司", null, null, null, null, null, null, null));
         Exhibition exhibition = new Exhibition();
         exhibition.setId(1L);
         exhibition.setTitle("当前展会");
