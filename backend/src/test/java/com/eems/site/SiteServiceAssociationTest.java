@@ -18,7 +18,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,9 +41,9 @@ class SiteServiceAssociationTest {
     @Autowired private ExhibitionService exhibitionService;
     @Autowired private SiteConfigService siteConfigService;
     @Autowired private JdbcTemplate jdbc;
-    @MockBean private AdminUserMapper adminUserMapper;
-    @MockBean private OperationLogService operationLogService;
-    @MockBean private SiteConfigMapper siteConfigMapper;
+    @MockitoBean private AdminUserMapper adminUserMapper;
+    @MockitoBean private OperationLogService operationLogService;
+    @MockitoBean private SiteConfigMapper siteConfigMapper;
 
     @BeforeEach
     void selectSiteA() {

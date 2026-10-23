@@ -20,6 +20,7 @@ class WebConfigTest {
         FileStorageProperties properties = new FileStorageProperties();
         properties.setLocalPath("D:/ems-uploads/");
 
+        @SuppressWarnings("unchecked")
         ObjectProvider<FileStorageProperties> provider = mock(ObjectProvider.class);
         when(provider.getIfAvailable(org.mockito.ArgumentMatchers.any())).thenReturn(properties);
 
