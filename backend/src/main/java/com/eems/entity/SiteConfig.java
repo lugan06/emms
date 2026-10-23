@@ -18,10 +18,12 @@ public class SiteConfig {
     private Long siteId;
     private String configCode;
     private Long currentExhibitionId;
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private String heroVideoUrl;
     private String siteTitle;
     private String siteSubtitle;
     private String domain;
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private String logoUrl;
     private String keywords;
     private String description;

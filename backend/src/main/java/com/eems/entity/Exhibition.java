@@ -21,6 +21,7 @@ public class Exhibition {
     private String subtitle;
     private Integer year;
     private String edition;
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private String coverUrl;
     private String summary;
     private String description;

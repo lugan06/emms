@@ -20,6 +20,7 @@ public class CmsContent {
     private Long exhibitionId;
     private String title;
     private String slug;
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private String coverUrl;
     private String summary;
     private String body;

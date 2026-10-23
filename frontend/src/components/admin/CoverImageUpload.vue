@@ -4,6 +4,9 @@
       <el-upload accept="image/*" :show-file-list="false" :disabled="uploading || disabled" :before-upload="beforeUpload" :http-request="upload">
         <el-button type="primary" :icon="Upload" :loading="uploading" :disabled="disabled">上传图片</el-button>
       </el-upload>
+      <el-button v-if="modelValue" text type="danger" :icon="Delete" :disabled="disabled || uploading" @click="clearImage">
+        清空图片
+      </el-button>
       <span class="hint">支持图片格式，大小不超过 10MB</span>
     </div>
     <el-image v-if="modelValue" :src="previewUrl" :preview-src-list="[previewUrl]" fit="cover" class="preview">
@@ -16,7 +19,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { ElMessage, type UploadRawFile, type UploadRequestOptions } from 'element-plus'
-import { Upload } from '@element-plus/icons-vue'
+import { Delete, Upload } from '@element-plus/icons-vue'
 import { adminApi } from '@/api/admin'
 import { resolveAssetUrl } from '@/utils/asset'
 import { validateImage } from '@/utils/image-upload'
@@ -44,6 +47,9 @@ async function upload(options: UploadRequestOptions): Promise<void> {
     uploading.value = false
     emit('uploading-change', false)
   }
+}
+function clearImage(): void {
+  emit('update:modelValue', null)
 }
 </script>
 

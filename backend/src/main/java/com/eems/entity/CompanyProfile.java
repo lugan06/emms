@@ -1,6 +1,8 @@
 package com.eems.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.FieldStrategy;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
@@ -21,6 +23,7 @@ public class CompanyProfile {
     private String fax;
     private String email;
     private String qq;
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private String wechatImageUrl;
     private String businessLicenseNo;
     private String otherInfo;
