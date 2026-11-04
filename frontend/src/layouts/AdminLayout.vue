@@ -20,6 +20,8 @@
           <span>内容管理</span>
         </RouterLink>
         <span class="nav-group">系统配置</span>
+        <RouterLink v-if="isSuperAdmin(userStore.user)" to="/admin/users" :class="{ 'menu-active': isAdminMenuActive(route.path, '/admin/users') }"><el-icon><Tickets /></el-icon><span>管理员管理</span></RouterLink>
+        <RouterLink v-if="isSuperAdmin(userStore.user)" to="/admin/sites" :class="{ 'menu-active': isAdminMenuActive(route.path, '/admin/sites') }"><el-icon><OfficeBuilding /></el-icon><span>站点管理</span></RouterLink>
         <RouterLink to="/admin/site" :class="{ 'menu-active': isAdminMenuActive(route.path, '/admin/site') }"><el-icon><Setting /></el-icon><span>站点配置</span></RouterLink>
         <RouterLink to="/admin/company" :class="{ 'menu-active': isAdminMenuActive(route.path, '/admin/company') }"><el-icon><OfficeBuilding /></el-icon><span>公司信息</span></RouterLink>
         <RouterLink to="/admin/guestbooks" :class="{ 'menu-active': isAdminMenuActive(route.path, '/admin/guestbooks') }"><el-icon><ChatDotRound /></el-icon><span>留言管理</span></RouterLink>

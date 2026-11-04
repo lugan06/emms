@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { NavigationGuard } from 'vue-router'
+import { adminRoutes } from './admin'
 
 const { state, warning, beforeEachGuard } = vi.hoisted(() => ({
   state: { isLoggedIn: false, userVerified: false, user: null as { roleCode: string } | null, refreshUser: vi.fn(), clearAuth: vi.fn() },
@@ -19,6 +20,16 @@ async function access(meta: Record<string, boolean>, fullPath: string) {
 }
 beforeEach(() => { state.isLoggedIn = false; state.userVerified = false; state.user = null; state.refreshUser.mockReset(); state.clearAuth.mockClear(); warning.mockClear() })
 describe('admin route access', () => {
+  it.each(['sites', 'users'])('protects the actual %s route and allows only verified super administrators', async path => {
+    const route = adminRoutes.children!.find(record => record.path === path)!
+    expect(route.meta?.requiresSuperAdmin).toBe(true)
+    const meta = { requiresAuth: true, requiresSuperAdmin: true }
+    expect(await access(meta, '/admin/' + path)).toEqual({ name: 'admin-login', query: { redirect: '/admin/' + path } })
+    state.isLoggedIn = true; state.userVerified = true; state.user = { roleCode: 'EDITOR' }
+    expect(await access(meta, '/admin/' + path)).toEqual({ name: 'admin-dashboard' })
+    state.user = { roleCode: 'SUPER_ADMIN' }
+    expect(await access(meta, '/admin/' + path)).toBe(true)
+  })
   it('preserves the protected destination when sending an anonymous visitor to login', async () => {
     expect(await access({ requiresAuth: true }, '/admin/logs')).toEqual({ name: 'admin-login', query: { redirect: '/admin/logs' } })
   })

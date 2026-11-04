@@ -45,7 +45,7 @@ router.beforeEach(async (to) => {
     }
   }
   if (to.meta.requiresSuperAdmin && !isSuperAdmin(userStore.user)) {
-    ElMessage.warning('无权限：仅超级管理员可查看操作日志')
+    ElMessage.warning('无权限：此页面仅超级管理员可访问')
     return { name: 'admin-dashboard' }
   }
 

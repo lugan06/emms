@@ -53,6 +53,8 @@ export const adminRoutes: RouteRecordRaw = {
       component: () => import('@/views/admin/ContentEditView.vue'),
       meta: { title: '编辑内容' },
     },
+    { path: 'users', name: 'admin-users', component: () => import('@/views/admin/AdminUserManagementView.vue'), meta: { title: '管理员管理', requiresSuperAdmin: true } },
+    { path: 'sites', name: 'admin-sites', component: () => import('@/views/admin/SiteManagementView.vue'), meta: { title: '站点管理', requiresSuperAdmin: true } },
     { path: 'site', name: 'admin-site', component: () => import('@/views/admin/SiteConfigView.vue'), meta: { title: '站点配置' } },
     { path: 'company', name: 'admin-company', component: () => import('@/views/admin/CompanyConfigView.vue'), meta: { title: '公司信息' } },
     { path: 'guestbooks', name: 'admin-guestbooks', component: () => import('@/views/admin/GuestbookListView.vue'), meta: { title: '留言管理' } },

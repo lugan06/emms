@@ -42,4 +42,14 @@ public interface AdminUserSiteMapper {
 
     @Delete("DELETE FROM admin_user_site WHERE admin_user_id = #{adminUserId}")
     int deleteByAdminUserId(@Param("adminUserId") Long adminUserId);
+
+    @Select("""
+            <script>
+            SELECT admin_user_id, site_id, created_at FROM admin_user_site WHERE admin_user_id IN
+            <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+            ORDER BY admin_user_id, site_id
+            </script>
+            """)
+    @ResultMap("adminUserSite")
+    List<AdminUserSite> selectByAdminUserIds(@Param("ids") List<Long> ids);
 }
