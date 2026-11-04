@@ -42,14 +42,15 @@ export default defineConfig({
     proxy: {
       '/api': {
         target: 'http://localhost:8080',
-        changeOrigin: true,
+        // SiteContext resolves the browser's domain; do not replace it with the proxy target.
+        changeOrigin: false,
         proxyTimeout,
         timeout: proxyTimeout,
         configure: configureProxy,
       },
       '/uploads': {
         target: 'http://localhost:8080',
-        changeOrigin: true,
+        changeOrigin: false,
         proxyTimeout,
         timeout: proxyTimeout,
         configure: configureProxy,
