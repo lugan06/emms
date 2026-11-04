@@ -103,6 +103,18 @@
     </dependencies>
 
     <build>
+        <testResources>
+            <testResource>
+                <directory>src/test/resources</directory>
+            </testResource>
+            <testResource>
+                <directory>../docs/sql</directory>
+                <targetPath>migration</targetPath>
+                <includes>
+                    <include>event_system_v2_admin_site_backfill.sql</include>
+                </includes>
+            </testResource>
+        </testResources>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

@@ -16,7 +16,7 @@ import java.util.Set;
 @Configuration
 public class MybatisPlusConfig {
     private static final Set<String> GLOBAL_TABLES = Set.of(
-            "site", "site_domain", "admin_user", "company_profile", "operation_log");
+            "site", "site_domain", "admin_user", "admin_user_site", "company_profile", "operation_log");
 
     @Bean
     public MybatisPlusInterceptor mybatisPlusInterceptor() {

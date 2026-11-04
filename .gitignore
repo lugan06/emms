@@ -25,8 +25,14 @@ pnpm-debug.log*
 **/data/
 *.log
 
-# Local project documentation
-/docs/
+# Local project documentation; retain only the V2 batch-1 deliverables in Git.
+/docs/*
+!/docs/sql/
+/docs/sql/*
+!/docs/sql/event_system_v2_admin_site_precheck.sql
+!/docs/sql/event_system_v2_admin_site_schema.sql
+!/docs/sql/event_system_v2_admin_site_backfill.sql
+!/docs/migration-v2-batch1.md
 
 # Local database scripts
 /database/

@@ -18,6 +18,7 @@ public class AdminUser {
     private String avatarUrl;
     private String roleCode;
     private String status;
+    private Long authVersion = 0L;
     private LocalDateTime lastLoginAt;
     private String lastLoginIp;
     private LocalDateTime createdAt;
@@ -80,6 +81,14 @@ public class AdminUser {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public Long getAuthVersion() {
+        return authVersion;
+    }
+
+    public void setAuthVersion(Long authVersion) {
+        this.authVersion = authVersion;
     }
 
     public LocalDateTime getLastLoginAt() {
