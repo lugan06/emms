@@ -41,12 +41,15 @@ public class AdminAuthController {
     @PostMapping("/login")
     @Operation(
             summary = "管理员登录",
-            description = "使用管理员账号和密码登录，成功后返回 JWT。token 可用于后续 /api/admin/** 接口。",
+            description = "按请求域名确定登录站点；SUPER_ADMIN 可登录任意启用站点，EDITOR 须有站点授权。"
+                    + "请求体仅含账号密码，不接受 X-Site-Id；JWT 包含 loginSiteId 和 authVersion。旧版 JWT 需重新登录。",
             operationId = "adminLogin")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "登录成功"),
             @ApiResponse(responseCode = "400", description = "账号或密码错误，或请求参数不合法",
                     content = @Content(schema = @Schema(ref = "#/components/schemas/Result"))),
+            @ApiResponse(responseCode = "403", description = "站点停用或账号未获站点授权"),
+            @ApiResponse(responseCode = "404", description = "域名未绑定站点"),
             @ApiResponse(responseCode = "500", description = "服务器内部错误")
     })
     public ResponseEntity<Result<AdminLoginResponse>> login(@Valid @RequestBody AdminLoginRequest request,
@@ -59,14 +62,16 @@ public class AdminAuthController {
     }
 
     @GetMapping("/me")
-    @Operation(summary = "获取当前管理员", description = "获取当前 JWT 对应的管理员基本信息")
+    @Operation(summary = "获取当前管理员", description = "返回数据库中的实时身份；每次检查账号状态及认证版本。"
+            + "EDITOR 还须匹配登录站点且保有当前授权。仅 SUPER_ADMIN 可携带 X-Site-Id。")
     @SecurityRequirement(name = "bearerAuth")
     public Result<AdminUserVO> me(Authentication authentication) {
         return Result.success(adminAuthService.currentUser(authentication.getName()));
     }
 
     @PutMapping("/password")
-    @Operation(summary = "修改管理员密码", description = "修改成功后前端应清除旧 token 并重新登录")
+    @Operation(summary = "修改管理员密码", description = "原密码校验通过后，原子修改密码并递增 auth_version，"
+            + "所有旧 JWT 立即失效，需重新登录；此接口不接受 X-Site-Id。")
     @SecurityRequirement(name = "bearerAuth")
     public Result<Void> changePassword(@Valid @RequestBody AdminPasswordChangeRequest request,
                                        Authentication authentication) {

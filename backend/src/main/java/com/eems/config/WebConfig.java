@@ -3,6 +3,7 @@ package com.eems.config;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.cors.CorsConfiguration;
@@ -17,9 +18,12 @@ import java.util.List;
 public class WebConfig implements WebMvcConfigurer {
 
     private final FileStorageProperties fileStorageProperties;
+    private final List<String> allowedOriginPatterns;
 
-    public WebConfig(ObjectProvider<FileStorageProperties> propertiesProvider) {
+    public WebConfig(ObjectProvider<FileStorageProperties> propertiesProvider,
+                     @Value("${eems.cors.allowed-origin-patterns}") List<String> allowedOriginPatterns) {
         this.fileStorageProperties = propertiesProvider.getIfAvailable(FileStorageProperties::new);
+        this.allowedOriginPatterns = allowedOriginPatterns;
     }
 
     @Override
@@ -44,9 +48,9 @@ public class WebConfig implements WebMvcConfigurer {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOriginPatterns(List.of("http://localhost:[*]", "http://127.0.0.1:[*]"));
+        configuration.setAllowedOriginPatterns(allowedOriginPatterns);
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With"));
+        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With", "X-Site-Id"));
         configuration.setExposedHeaders(List.of("Authorization", "Content-Disposition"));
         configuration.setAllowCredentials(true);
 

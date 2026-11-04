@@ -7,6 +7,7 @@ import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -24,7 +25,7 @@ class WebConfigTest {
         ObjectProvider<FileStorageProperties> provider = mock(ObjectProvider.class);
         when(provider.getIfAvailable(org.mockito.ArgumentMatchers.any())).thenReturn(properties);
 
-        WebConfig webConfig = new WebConfig(provider);
+        WebConfig webConfig = new WebConfig(provider, List.of("http://localhost:[*]"));
         ResourceHandlerRegistry registry = mock(ResourceHandlerRegistry.class);
         ResourceHandlerRegistration registration = mock(ResourceHandlerRegistration.class);
         when(registry.addResourceHandler("/uploads/**")).thenReturn(registration);

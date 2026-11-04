@@ -2,7 +2,7 @@ package com.eems.controller;
 
 import com.eems.common.api.PageResult;
 import com.eems.config.SecurityConfig;
-import com.eems.security.JwtAuthenticationFilter;
+import com.eems.security.ControllerSecurityTestConfig;
 import com.eems.security.JwtTokenUtil;
 import com.eems.service.FileAssetService;
 import com.eems.vo.FileAssetVO;
@@ -33,7 +33,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 
 @WebMvcTest(FileAssetController.class)
 @AutoConfigureMockMvc
-@Import({SecurityConfig.class, JwtAuthenticationFilter.class})
+@Import({SecurityConfig.class, ControllerSecurityTestConfig.class})
 class FileAssetControllerTest {
     @Autowired
     private MockMvc mockMvc;

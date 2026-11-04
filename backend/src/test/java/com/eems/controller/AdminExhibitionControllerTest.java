@@ -1,7 +1,7 @@
 package com.eems.controller;
 
 import com.eems.config.SecurityConfig;
-import com.eems.security.JwtAuthenticationFilter;
+import com.eems.security.ControllerSecurityTestConfig;
 import com.eems.security.JwtTokenUtil;
 import com.eems.service.ExhibitionService;
 import org.junit.jupiter.api.Test;
@@ -22,7 +22,7 @@ import static org.mockito.Mockito.when;
 
 @WebMvcTest(AdminExhibitionController.class)
 @AutoConfigureMockMvc
-@Import({SecurityConfig.class, JwtAuthenticationFilter.class})
+@Import({SecurityConfig.class, ControllerSecurityTestConfig.class})
 class AdminExhibitionControllerTest {
     @Autowired
     private MockMvc mockMvc;

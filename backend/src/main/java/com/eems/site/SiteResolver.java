@@ -17,12 +17,12 @@ public class SiteResolver {
         this.environment = environment;
     }
 
-    public Long resolve(String hostHeader, boolean adminRequest) {
+    public ResolvedSite resolveHost(String hostHeader) {
         String hostname = HostParser.parse(hostHeader);
-        List<SiteRecord> matches = jdbc.query(
+        List<ResolvedSite> matches = jdbc.query(
                 "SELECT s.id, s.status FROM site_domain d JOIN site s ON s.id = d.site_id WHERE d.domain = ?",
-                (rs, rowNum) -> new SiteRecord(rs.getLong("id"), rs.getString("status")), hostname);
-        SiteRecord selected;
+                (rs, rowNum) -> new ResolvedSite(rs.getLong("id"), rs.getString("status")), hostname);
+        ResolvedSite selected;
         if (matches.isEmpty()) {
             if (!localFallbackEnabled()) {
                 throw new SiteResolutionException("SITE_NOT_FOUND", "未找到对应站点", 404);
@@ -31,18 +31,27 @@ public class SiteResolver {
         } else {
             selected = matches.get(0);
         }
+        return selected;
+    }
+
+    public ResolvedSite requireSite(Long siteId) {
+        List<ResolvedSite> matches = jdbc.query("SELECT id, status FROM site WHERE id = ?",
+                (rs, rowNum) -> new ResolvedSite(rs.getLong("id"), rs.getString("status")), siteId);
+        if (matches.isEmpty()) {
+            throw new SiteResolutionException("SITE_NOT_FOUND", "未找到对应站点", 404);
+        }
+        return matches.get(0);
+    }
+
+    public static void requireEnabled(ResolvedSite selected) {
         if (!"ENABLED".equals(selected.status())) {
             throw new SiteResolutionException("SITE_DISABLED", "站点已停用", 403);
         }
-        if (adminRequest && !selected.id().equals(defaultSite().id())) {
-            throw new SiteResolutionException("SITE_ADMIN_FORBIDDEN", "当前管理端仅支持默认站点", 403);
-        }
-        return selected.id();
     }
 
-    private SiteRecord defaultSite() {
-        List<SiteRecord> rows = jdbc.query("SELECT id, status FROM site WHERE code = 'default'",
-                (rs, rowNum) -> new SiteRecord(rs.getLong("id"), rs.getString("status")));
+    private ResolvedSite defaultSite() {
+        List<ResolvedSite> rows = jdbc.query("SELECT id, status FROM site WHERE code = 'default'",
+                (rs, rowNum) -> new ResolvedSite(rs.getLong("id"), rs.getString("status")));
         if (rows.size() != 1) {
             throw new SiteResolutionException("DEFAULT_SITE_MISSING", "默认站点未配置", 503);
         }
@@ -54,6 +63,6 @@ public class SiteResolver {
                 && !environment.acceptsProfiles(Profiles.of("prod"));
     }
 
-    private record SiteRecord(Long id, String status) {
+    public record ResolvedSite(Long id, String status) {
     }
 }

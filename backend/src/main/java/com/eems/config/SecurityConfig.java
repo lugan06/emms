@@ -1,7 +1,8 @@
 package com.eems.config;
 
 import com.eems.security.JwtAuthenticationFilter;
-import jakarta.servlet.http.HttpServletResponse;
+import com.eems.security.SecurityFailureHandler;
+import com.eems.site.SiteContextFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -18,9 +19,14 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final SiteContextFilter siteContextFilter;
+    private final SecurityFailureHandler failures;
 
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter, SiteContextFilter siteContextFilter,
+                          SecurityFailureHandler failures) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.siteContextFilter = siteContextFilter;
+        this.failures = failures;
     }
 
     @Bean
@@ -36,18 +42,16 @@ public class SecurityConfig {
                         .anyRequest().permitAll())
                 .exceptionHandling(exceptionHandling -> exceptionHandling
                         .authenticationEntryPoint((request, response, exception) -> {
-                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                            response.setContentType("application/json;charset=UTF-8");
-                            response.getWriter().write("{\"code\":\"UNAUTHORIZED\",\"message\":\"请先登录\",\"data\":null}");
+                            failures.reject(request, response, 401, "UNAUTHORIZED", "请先登录", null);
                         })
                         .accessDeniedHandler((request, response, exception) -> {
-                            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                            response.setContentType("application/json;charset=UTF-8");
-                            response.getWriter().write("{\"code\":\"FORBIDDEN\",\"message\":\"没有权限\",\"data\":null}");
+                            failures.reject(request, response, 403, "FORBIDDEN", "没有权限", request.getUserPrincipal() == null
+                                    ? null : request.getUserPrincipal().getName());
                         }))
                 .httpBasic(httpBasic -> httpBasic.disable())
                 .formLogin(form -> form.disable())
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(siteContextFilter, JwtAuthenticationFilter.class);
         return http.build();
     }
 }

@@ -1,7 +1,7 @@
 package com.eems.controller;
 
 import com.eems.config.SecurityConfig;
-import com.eems.security.JwtAuthenticationFilter;
+import com.eems.security.ControllerSecurityTestConfig;
 import com.eems.security.JwtTokenUtil;
 import com.eems.service.PublicContentService;
 import org.junit.jupiter.api.Test;
@@ -18,7 +18,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(PublicContentController.class)
 @AutoConfigureMockMvc
-@Import({SecurityConfig.class, JwtAuthenticationFilter.class})
+@Import({SecurityConfig.class, ControllerSecurityTestConfig.class})
 class PublicContentControllerTest {
     @Autowired
     private MockMvc mockMvc;

@@ -3,7 +3,7 @@ package com.eems.controller;
 import com.eems.common.api.PageResult;
 import com.eems.config.SecurityConfig;
 import com.eems.dto.GuestbookReplyRequest;
-import com.eems.security.JwtAuthenticationFilter;
+import com.eems.security.ControllerSecurityTestConfig;
 import com.eems.security.JwtTokenUtil;
 import com.eems.service.GuestbookService;
 import com.eems.vo.GuestbookVO;
@@ -27,7 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(AdminGuestbookController.class)
 @AutoConfigureMockMvc
-@Import({SecurityConfig.class, JwtAuthenticationFilter.class})
+@Import({SecurityConfig.class, ControllerSecurityTestConfig.class})
 class AdminGuestbookControllerTest {
     @Autowired
     private MockMvc mockMvc;

@@ -1,6 +1,7 @@
 package com.eems.common.exception;
 
 import com.eems.common.api.Result;
+import com.eems.site.SiteResolutionException;
 import com.eems.util.TraceIdUtil;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -18,6 +19,12 @@ import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(SiteResolutionException.class)
+    public ResponseEntity<Result<Void>> handleSiteResolution(SiteResolutionException exception) {
+        return ResponseEntity.status(exception.getStatus())
+                .body(Result.failure(exception.getCode(), exception.getMessage(), TraceIdUtil.currentOrCreate()));
+    }
 
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<Result<Void>> handleBusinessException(BusinessException exception) {

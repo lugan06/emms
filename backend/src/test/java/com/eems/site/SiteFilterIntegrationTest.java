@@ -62,10 +62,10 @@ class SiteFilterIntegrationTest {
     }
 
     @Test
-    void adminOnOtherSiteIsRejectedBeforeAuthentication() throws Exception {
+    void adminOnOtherSiteRequiresAuthentication() throws Exception {
         mockMvc.perform(get("/api/admin/site").header("Host", "b.example"))
-                .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.code").value("SITE_ADMIN_FORBIDDEN"));
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value("UNAUTHORIZED"));
         assertThrows(IllegalStateException.class, SiteContext::requireSiteId);
     }
 

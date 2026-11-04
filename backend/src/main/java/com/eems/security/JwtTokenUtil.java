@@ -21,12 +21,14 @@ public class JwtTokenUtil {
         this.signingKey = Keys.hmacShaKeyFor(properties.getSecret().getBytes(StandardCharsets.UTF_8));
     }
 
-    public String generateToken(Long userId, String username, String roleCode) {
+    public String generateToken(Long userId, String username, String roleCode, Long loginSiteId, Long authVersion) {
         Instant issuedAt = Instant.now();
         return Jwts.builder()
                 .subject(username)
                 .claim("userId", userId)
                 .claim("roleCode", roleCode)
+                .claim("loginSiteId", loginSiteId)
+                .claim("authVersion", authVersion)
                 .issuedAt(Date.from(issuedAt))
                 .expiration(Date.from(issuedAt.plusSeconds(properties.getAccessTokenTtl())))
                 .signWith(signingKey)

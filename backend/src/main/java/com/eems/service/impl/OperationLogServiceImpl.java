@@ -12,6 +12,8 @@ import com.eems.mapper.OperationLogMapper;
 import com.eems.service.OperationLogService;
 import com.eems.vo.OperationLogVO;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.Locale;
@@ -55,6 +57,7 @@ public class OperationLogServiceImpl implements OperationLogService {
     }
 
     @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void failure(String module, String username, String operation, String requestMethod,
                         String requestUrl, String requestIp, String params, String errorMessage) {
         AdminUser user = username == null ? null : adminUserMapper.selectOne(new LambdaQueryWrapper<AdminUser>()

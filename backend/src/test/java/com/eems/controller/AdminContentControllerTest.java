@@ -2,7 +2,7 @@ package com.eems.controller;
 
 import com.eems.config.SecurityConfig;
 import com.eems.dto.ContentSaveRequest;
-import com.eems.security.JwtAuthenticationFilter;
+import com.eems.security.ControllerSecurityTestConfig;
 import com.eems.security.JwtTokenUtil;
 import com.eems.service.ContentService;
 import com.eems.vo.ContentVO;
@@ -26,7 +26,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(AdminContentController.class)
 @AutoConfigureMockMvc
-@Import({SecurityConfig.class, JwtAuthenticationFilter.class})
+@Import({SecurityConfig.class, ControllerSecurityTestConfig.class})
 class AdminContentControllerTest {
     @Autowired
     private MockMvc mockMvc;

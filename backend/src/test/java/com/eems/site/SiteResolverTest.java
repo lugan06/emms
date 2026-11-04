@@ -30,49 +30,58 @@ class SiteResolverTest {
         resolver = new SiteResolver(jdbc, environment);
     }
 
+    private Long resolveEnabled(String host) {
+        var site = resolver.resolveHost(host);
+        SiteResolver.requireEnabled(site);
+        return site.id();
+    }
+
     @Test
     void resolvesNormalizedHostAndKeepsSitesDistinct() {
-        assertEquals(1L, resolver.resolve("A.Example.:5173", false));
-        assertEquals(2L, resolver.resolve("b.example", false));
+        assertEquals(1L, resolveEnabled("A.Example.:5173"));
+        assertEquals(2L, resolveEnabled("b.example"));
     }
 
     @Test
     void unknownHostFallsBackOnlyInLocalOrTest() {
-        assertEquals(1L, resolver.resolve("tunnel.example", false));
+        assertEquals(1L, resolveEnabled("tunnel.example"));
         environment.setActiveProfiles("prod");
         assertEquals("SITE_NOT_FOUND", assertThrows(SiteResolutionException.class,
-                () -> resolver.resolve("tunnel.example", false)).getCode());
+                () -> resolveEnabled("tunnel.example")).getCode());
     }
 
     @Test
     void disabledSiteDoesNotFallBack() {
         jdbc.update("UPDATE site SET status = 'DISABLED' WHERE id = 2");
         assertEquals("SITE_DISABLED", assertThrows(SiteResolutionException.class,
-                () -> resolver.resolve("b.example", false)).getCode());
+                () -> resolveEnabled("b.example")).getCode());
     }
 
     @Test
     void missingOrDisabledDefaultFailsClosed() {
         jdbc.update("UPDATE site SET status = 'DISABLED' WHERE id = 1");
         assertEquals("SITE_DISABLED", assertThrows(SiteResolutionException.class,
-                () -> resolver.resolve("unknown.example", false)).getCode());
+                () -> resolveEnabled("unknown.example")).getCode());
         jdbc.update("DELETE FROM site WHERE id = 1");
         assertEquals("DEFAULT_SITE_MISSING", assertThrows(SiteResolutionException.class,
-                () -> resolver.resolve("unknown.example", false)).getCode());
+                () -> resolveEnabled("unknown.example")).getCode());
     }
 
     @Test
-    void adminCannotSelectOtherSiteUsingHost() {
-        assertEquals("SITE_ADMIN_FORBIDDEN", assertThrows(SiteResolutionException.class,
-                () -> resolver.resolve("b.example", true)).getCode());
-        assertEquals(1L, resolver.resolve("a.example", true));
+    void adminCanResolveNonDefaultAndDisabledSitesBeforeIdentityChecks() {
+        assertEquals(2L, resolver.resolveHost("b.example").id());
+        jdbc.update("UPDATE site SET status = 'DISABLED' WHERE id = 2");
+        assertEquals("DISABLED", resolver.resolveHost("b.example").status());
+        assertEquals(2L, resolver.requireSite(2L).id());
+        assertEquals("SITE_NOT_FOUND", assertThrows(SiteResolutionException.class,
+                () -> resolver.requireSite(99L)).getCode());
     }
 
     @Test
     void rejectsMalformedHostInsteadOfFallingBack() {
         for (String host : new String[] {"https://a.example", "a.example:bad", "a.example, b.example", "a..example", ""}) {
             assertEquals("INVALID_HOST", assertThrows(SiteResolutionException.class,
-                    () -> resolver.resolve(host, false)).getCode());
+                    () -> resolveEnabled(host)).getCode());
         }
     }
 

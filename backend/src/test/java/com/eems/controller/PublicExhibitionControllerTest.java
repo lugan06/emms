@@ -1,7 +1,7 @@
 package com.eems.controller;
 
 import com.eems.config.SecurityConfig;
-import com.eems.security.JwtAuthenticationFilter;
+import com.eems.security.ControllerSecurityTestConfig;
 import com.eems.security.JwtTokenUtil;
 import com.eems.service.ExhibitionService;
 import com.eems.vo.PublicExhibitionVO;
@@ -24,7 +24,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(PublicExhibitionController.class)
 @AutoConfigureMockMvc
-@Import({SecurityConfig.class, JwtAuthenticationFilter.class})
+@Import({SecurityConfig.class, ControllerSecurityTestConfig.class})
 class PublicExhibitionControllerTest {
     @Autowired
     private MockMvc mockMvc;
