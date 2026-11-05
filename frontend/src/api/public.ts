@@ -10,9 +10,14 @@ import type {
   PublicExhibition,
   PublicExhibitionQuery,
   PublicHome,
+  PublicSite,
 } from '@/types/public'
 
 export const publicApi = {
+  site(): Promise<PublicSite> {
+    return http.get<PublicSite, PublicSite>('/api/public/site')
+  },
+
   submitGuestbook(payload: GuestbookCreateRequest): Promise<null> {
     return http.post<null, null>('/api/public/guestbook', payload)
   },

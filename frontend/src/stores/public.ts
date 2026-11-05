@@ -6,6 +6,17 @@ import type { PublicCategory, PublicCompany, PublicSite } from '@/types/public'
 
 export const usePublicStore = defineStore('public', () => {
   const site = ref<PublicSite | null>(null)
+  let siteRequest: Promise<void> | null = null
+
+  async function loadSite(): Promise<void> {
+    if (site.value) return
+    if (!siteRequest) {
+      siteRequest = publicApi.site().then(value => { site.value ??= value })
+        .catch(() => { /* Keep public pages usable and allow a later retry. */ })
+        .finally(() => { siteRequest = null })
+    }
+    await siteRequest
+  }
   const company = ref<PublicCompany | null>(null)
   const categories = ref<PublicCategory[]>([])
   const navigationLoading = ref(false)
@@ -49,6 +60,7 @@ export const usePublicStore = defineStore('public', () => {
 
   return {
     site,
+    loadSite,
     company,
     categories,
     navigationLoading,

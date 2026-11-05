@@ -12,11 +12,12 @@ import PublicLayout from '@/layouts/PublicLayout.vue'
 import { usePublicStore } from '@/stores/public'
 import { userRoutes } from '@/router/user'
 import type { PublicCompany, PublicContent, PublicHome } from '@/types/public'
+import { createFooterInfo, serializeFooterInfo } from '@/utils/footer'
 
-const { home, company, contentDetail, categoryContents, exhibitions } = vi.hoisted(() => ({
-  home: vi.fn(), company: vi.fn(), contentDetail: vi.fn(), categoryContents: vi.fn(), exhibitions: vi.fn(),
+const { home, company, site, contentDetail, categoryContents, exhibitions } = vi.hoisted(() => ({
+  home: vi.fn(), company: vi.fn(), site: vi.fn(), contentDetail: vi.fn(), categoryContents: vi.fn(), exhibitions: vi.fn(),
 }))
-vi.mock('@/api/public', () => ({ publicApi: { home, company, contentDetail, categoryContents, exhibitions } }))
+vi.mock('@/api/public', () => ({ publicApi: { home, company, site, contentDetail, categoryContents, exhibitions } }))
 vi.mock('@/composables/usePublicSmoothScroll', () => ({ usePublicSmoothScroll: vi.fn() }))
 vi.mock('@/components/public/PublicGuestbookForm.vue', () => ({
   default: { template: '<section id="online-guestbook">在线留言</section>' },
@@ -49,7 +50,8 @@ let container: HTMLDivElement
 
 async function mount(component: Component, path = '/') {
   const pinia = createPinia()
-  const router = createRouter({ history: createMemoryHistory(), routes: [userRoutes] })
+  const routes = component === PublicLayout ? [{ path: '/:pathMatch(.*)*', component: { template: '<div>公共页面</div>' } }] : [userRoutes]
+  const router = createRouter({ history: createMemoryHistory(), routes })
   await router.push(path)
   await router.isReady()
   container = document.createElement('div')
@@ -302,25 +304,42 @@ describe('contact page', () => {
 
 describe('public footer', () => {
   it('renders the three footer rows and links the ICP number to the official site', async () => {
-    const site = {
+    const siteConfig = {
       ...homeFixture().site,
       siteTitle: '上海国际展览会',
       icpNumber: '沪ICP备2026000000号',
+      footerInfo: serializeFooterInfo({ ...createFooterInfo(), organizer: '独立主办方', contractor: '独立承办方',
+        phone: '13700000001', contactName: '页脚联系人', email: 'footer@example.test', copyrightOwner: '独立版权单位' }),
     }
+    site.mockResolvedValue(siteConfig)
     const { store } = await mount(PublicLayout)
-    store.setSite(site, contactCompany)
+    store.company = contactCompany
 
-    await vi.waitFor(() => expect(container.querySelector('.footer-meta')).not.toBeNull())
+    await vi.waitFor(() => expect(container.querySelector('.footer-organizations')).not.toBeNull())
 
-    expect(container.querySelector('.footer-organizations')?.textContent).toMatch(/主办单位\s*上海国际展览会/)
-    expect(container.querySelector('.footer-organizations')?.textContent).toMatch(/承办单位\s*配置的联系公司/)
-    expect(container.querySelector('.footer-contacts')?.textContent).toMatch(/电话\s*021-12345678/)
-    expect(container.querySelector('.footer-contacts')?.textContent).toMatch(/联系人\s*联系人甲/)
-    expect(container.querySelector('.footer-contacts')?.textContent).toMatch(/邮箱\s*contact@example\.test/)
+    expect(container.querySelector('.footer-organizations')?.textContent).toMatch(/主办单位\s*独立主办方/)
+    expect(container.querySelector('.footer-organizations')?.textContent).toMatch(/承办单位\s*独立承办方/)
+    expect(container.querySelector('.footer-contacts')?.textContent).toMatch(/电话\s*13700000001/)
+    expect(container.querySelector('.footer-contacts')?.textContent).toMatch(/联系人\s*页脚联系人/)
+    expect(container.querySelector('.footer-contacts a[href="tel:13700000001"]')).not.toBeNull()
+    expect(container.querySelector('.footer-contacts a[href="mailto:footer@example.test"]')).not.toBeNull()
+    expect(container.querySelector('.footer-meta')?.textContent).toContain('独立版权单位')
 
     const icpLink = container.querySelector<HTMLAnchorElement>('.footer-meta a')
     expect(icpLink?.textContent).toBe('沪ICP备2026000000号')
     expect(icpLink?.getAttribute('href')).toBe('https://beian.miit.gov.cn/')
     expect(icpLink?.getAttribute('target')).toBe('_blank')
+    expect(icpLink?.getAttribute('rel')).toBe('noopener noreferrer')
+  })
+
+  it('shows saved legacy text safely and hides empty footer fields without substituting company details', async () => {
+    site.mockResolvedValue({ ...homeFixture().site, footerInfo: '<b>自定义纯文本说明</b>' })
+    const { store } = await mount(PublicLayout)
+    store.company = contactCompany
+    await vi.waitFor(() => expect(container.querySelector('.footer-extra')?.textContent).toBe('<b>自定义纯文本说明</b>'))
+    expect(container.querySelector('.footer-extra b')).toBeNull()
+    expect(container.querySelector('.footer-organizations')).toBeNull()
+    expect(container.querySelector('.footer-contacts')).toBeNull()
+    expect(container.querySelector('.footer-meta a')).toBeNull()
   })
 })

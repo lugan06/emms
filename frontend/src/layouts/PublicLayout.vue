@@ -19,34 +19,35 @@
 
     <footer class="user-footer">
       <div class="footer-inner">
-        <div class="footer-row footer-organizations">
-          <div v-if="publicStore.site?.siteTitle" class="footer-item">
+        <div v-if="footer.organizer || footer.contractor" class="footer-row footer-organizations">
+          <div v-if="footer.organizer" class="footer-item">
             <strong>主办单位</strong>
-            <span>{{ publicStore.site.siteTitle }}</span>
+            <span>{{ footer.organizer }}</span>
           </div>
-          <div v-if="publicStore.company?.companyName" class="footer-item">
+          <div v-if="footer.contractor" class="footer-item">
             <strong>承办单位</strong>
-            <span>{{ publicStore.company.companyName }}</span>
+            <span>{{ footer.contractor }}</span>
           </div>
         </div>
-        <div v-if="publicStore.company" class="footer-row footer-contacts">
-          <div v-if="publicStore.company.telephone || publicStore.company.mobile" class="footer-item">
+        <div v-if="footer.phone || footer.contactName || footer.email" class="footer-row footer-contacts">
+          <div v-if="footer.phone" class="footer-item">
             <strong>电话</strong>
-            <a :href="`tel:${publicStore.company.telephone || publicStore.company.mobile}`">
-              {{ publicStore.company.telephone || publicStore.company.mobile }}
+            <a :href="`tel:${footer.phone}`">
+              {{ footer.phone }}
             </a>
           </div>
-          <div v-if="publicStore.company.contactName" class="footer-item">
+          <div v-if="footer.contactName" class="footer-item">
             <strong>联系人</strong>
-            <span>{{ publicStore.company.contactName }}</span>
+            <span>{{ footer.contactName }}</span>
           </div>
-          <div v-if="publicStore.company.email" class="footer-item">
+          <div v-if="footer.email" class="footer-item">
             <strong>邮箱</strong>
-            <a :href="`mailto:${publicStore.company.email}`">{{ publicStore.company.email }}</a>
+            <a :href="`mailto:${footer.email}`">{{ footer.email }}</a>
           </div>
         </div>
+        <p v-if="footer.extraText" class="footer-extra">{{ footer.extraText }}</p>
         <div class="footer-row footer-meta">
-          <span>© {{ copyrightYear }} {{ publicStore.company?.companyName || publicStore.site?.siteTitle || 'EEMS' }}</span>
+          <span>© {{ copyrightYear }} {{ footer.copyrightOwner || publicStore.company?.companyName || publicStore.site?.siteTitle || 'EEMS' }}</span>
           <a
             v-if="publicStore.site?.icpNumber"
             href="https://beian.miit.gov.cn/"
@@ -60,7 +61,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { computed, onMounted } from 'vue'
 import { RouterLink, RouterView } from 'vue-router'
 
 import PublicCategoryNavigation from '@/components/public/PublicCategoryNavigation.vue'
@@ -68,13 +69,16 @@ import FloatingContact from '@/components/public/FloatingContact.vue'
 import SiteLogo from '@/components/public/SiteLogo.vue'
 import { usePublicSmoothScroll } from '@/composables/usePublicSmoothScroll'
 import { usePublicStore } from '@/stores/public'
+import { parseFooterInfo } from '@/utils/footer'
 import '@/styles/public-motion.css'
 
 const publicStore = usePublicStore()
+const footer = computed(() => parseFooterInfo(publicStore.site?.footerInfo))
 const copyrightYear = new Date().getFullYear()
 usePublicSmoothScroll()
 
 onMounted(() => {
+  void publicStore.loadSite()
   void publicStore.loadNavigation()
 })
 </script>
@@ -169,6 +173,21 @@ onMounted(() => {
   gap: 8px;
   color: #d1d5db;
   font-size: 13px;
+  line-height: 1.7;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.footer-item strong { flex-shrink: 0; }
+
+.footer-extra {
+  margin: 0;
+  color: #d1d5db;
+  font-size: 13px;
+  line-height: 1.7;
+  text-align: center;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 .footer-item strong {

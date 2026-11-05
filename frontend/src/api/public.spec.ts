@@ -4,6 +4,13 @@ const { get, post } = vi.hoisted(() => ({ get: vi.fn(), post: vi.fn() }))
 vi.mock('@/utils/http', () => ({ http: { get, post } }))
 
 describe('publicApi', () => {
+  it('loads public site configuration including editable footer information', async () => {
+    const { publicApi } = await import('./public')
+    const site = { footerInfo: '{"version":1,"organizer":"主办方"}', icpNumber: '沪ICP备测试号' }
+    get.mockResolvedValueOnce(site)
+    expect(await publicApi.site()).toEqual(site)
+    expect(get).toHaveBeenCalledWith('/api/public/site')
+  })
   it('submits the documented guestbook fields and propagates business failures', async () => {
     const { publicApi } = await import('./public')
     const payload = { name: '访客', phone: null, email: null, companyName: null, message: '咨询展会信息' }
