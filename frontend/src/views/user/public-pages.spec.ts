@@ -8,6 +8,7 @@ import ContactView from './ContactView.vue'
 import ContentView from './ContentView.vue'
 import CategoryContentView from './CategoryContentView.vue'
 import ExhibitionListView from './ExhibitionListView.vue'
+import PublicLayout from '@/layouts/PublicLayout.vue'
 import { usePublicStore } from '@/stores/public'
 import { userRoutes } from '@/router/user'
 import type { PublicCompany, PublicContent, PublicHome } from '@/types/public'
@@ -16,6 +17,7 @@ const { home, company, contentDetail, categoryContents, exhibitions } = vi.hoist
   home: vi.fn(), company: vi.fn(), contentDetail: vi.fn(), categoryContents: vi.fn(), exhibitions: vi.fn(),
 }))
 vi.mock('@/api/public', () => ({ publicApi: { home, company, contentDetail, categoryContents, exhibitions } }))
+vi.mock('@/composables/usePublicSmoothScroll', () => ({ usePublicSmoothScroll: vi.fn() }))
 vi.mock('@/components/public/PublicGuestbookForm.vue', () => ({
   default: { template: '<section id="online-guestbook">在线留言</section>' },
 }))
@@ -295,5 +297,30 @@ describe('contact page', () => {
     await vi.waitFor(() => expect(container.textContent).toContain(contactCompany.companyName))
     expect(container.textContent).not.toContain('联系信息加载失败')
     expect(company).toHaveBeenCalledTimes(2)
+  })
+})
+
+describe('public footer', () => {
+  it('renders the three footer rows and links the ICP number to the official site', async () => {
+    const site = {
+      ...homeFixture().site,
+      siteTitle: '上海国际展览会',
+      icpNumber: '沪ICP备2026000000号',
+    }
+    const { store } = await mount(PublicLayout)
+    store.setSite(site, contactCompany)
+
+    await vi.waitFor(() => expect(container.querySelector('.footer-meta')).not.toBeNull())
+
+    expect(container.querySelector('.footer-organizations')?.textContent).toMatch(/主办单位\s*上海国际展览会/)
+    expect(container.querySelector('.footer-organizations')?.textContent).toMatch(/承办单位\s*配置的联系公司/)
+    expect(container.querySelector('.footer-contacts')?.textContent).toMatch(/电话\s*021-12345678/)
+    expect(container.querySelector('.footer-contacts')?.textContent).toMatch(/联系人\s*联系人甲/)
+    expect(container.querySelector('.footer-contacts')?.textContent).toMatch(/邮箱\s*contact@example\.test/)
+
+    const icpLink = container.querySelector<HTMLAnchorElement>('.footer-meta a')
+    expect(icpLink?.textContent).toBe('沪ICP备2026000000号')
+    expect(icpLink?.getAttribute('href')).toBe('https://beian.miit.gov.cn/')
+    expect(icpLink?.getAttribute('target')).toBe('_blank')
   })
 })

@@ -19,16 +19,40 @@
 
     <footer class="user-footer">
       <div class="footer-inner">
-        <div>
-          <strong>{{ publicStore.site?.siteTitle || 'EEMS' }}</strong>
-          <p v-if="publicStore.site?.footerInfo">{{ publicStore.site.footerInfo }}</p>
-          <p v-if="publicStore.site?.icpNumber">{{ publicStore.site.icpNumber }}</p>
+        <div class="footer-row footer-organizations">
+          <div v-if="publicStore.site?.siteTitle" class="footer-item">
+            <strong>主办单位</strong>
+            <span>{{ publicStore.site.siteTitle }}</span>
+          </div>
+          <div v-if="publicStore.company?.companyName" class="footer-item">
+            <strong>承办单位</strong>
+            <span>{{ publicStore.company.companyName }}</span>
+          </div>
         </div>
-        <div v-if="publicStore.company" class="company-summary">
-          <strong>{{ publicStore.company.companyName }}</strong>
-          <p v-if="publicStore.company.address">{{ publicStore.company.address }}</p>
-          <p v-if="publicStore.company.telephone">电话：{{ publicStore.company.telephone }}</p>
-          <p v-if="publicStore.company.email">邮箱：{{ publicStore.company.email }}</p>
+        <div v-if="publicStore.company" class="footer-row footer-contacts">
+          <div v-if="publicStore.company.telephone || publicStore.company.mobile" class="footer-item">
+            <strong>电话</strong>
+            <a :href="`tel:${publicStore.company.telephone || publicStore.company.mobile}`">
+              {{ publicStore.company.telephone || publicStore.company.mobile }}
+            </a>
+          </div>
+          <div v-if="publicStore.company.contactName" class="footer-item">
+            <strong>联系人</strong>
+            <span>{{ publicStore.company.contactName }}</span>
+          </div>
+          <div v-if="publicStore.company.email" class="footer-item">
+            <strong>邮箱</strong>
+            <a :href="`mailto:${publicStore.company.email}`">{{ publicStore.company.email }}</a>
+          </div>
+        </div>
+        <div class="footer-row footer-meta">
+          <span>© {{ copyrightYear }} {{ publicStore.company?.companyName || publicStore.site?.siteTitle || 'EEMS' }}</span>
+          <a
+            v-if="publicStore.site?.icpNumber"
+            href="https://beian.miit.gov.cn/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >{{ publicStore.site.icpNumber }}</a>
         </div>
       </div>
     </footer>
@@ -47,6 +71,7 @@ import { usePublicStore } from '@/stores/public'
 import '@/styles/public-motion.css'
 
 const publicStore = usePublicStore()
+const copyrightYear = new Date().getFullYear()
 usePublicSmoothScroll()
 
 onMounted(() => {
@@ -123,25 +148,53 @@ onMounted(() => {
 
 .footer-inner {
   display: flex;
-  justify-content: space-between;
-  gap: 40px;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
   padding: 36px 0;
 }
 
-.footer-inner strong {
-  color: #ffffff;
-  font-size: 15px;
+.footer-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px 28px;
+  width: 100%;
 }
 
-.footer-inner p {
-  margin: 8px 0 0;
-  color: #9ca3af;
+.footer-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #d1d5db;
   font-size: 13px;
-  line-height: 1.6;
 }
 
-.company-summary {
-  text-align: right;
+.footer-item strong {
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.footer-item a,
+.footer-meta a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.footer-item a:hover,
+.footer-meta a:hover {
+  color: #ffffff;
+}
+
+.footer-meta {
+  gap: 8px 20px;
+  padding-top: 12px;
+  border-top: 1px solid rgb(255 255 255 / 12%);
+  color: #9ca3af;
+  font-size: 12px;
+  line-height: 1.5;
 }
 
 @media (max-width: 760px) {
@@ -171,11 +224,17 @@ onMounted(() => {
   }
 
   .footer-inner {
-    flex-direction: column;
+    align-items: stretch;
   }
 
-  .company-summary {
-    text-align: left;
+  .footer-row {
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 10px 18px;
+  }
+
+  .footer-meta {
+    justify-content: center;
   }
 }
 </style>
