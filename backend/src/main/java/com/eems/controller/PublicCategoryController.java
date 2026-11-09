@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -35,10 +36,10 @@ public class PublicCategoryController {
     }
 
     @GetMapping("/{code}/contents")
-    @Operation(summary = "获取栏目公开内容", description = "只返回已发布、已到发布时间且未删除的内容")
+    @Operation(summary = "获取栏目公开内容", description = "只返回当前站点已发布、已到发布时间且未删除的内容；includeChildren=true 汇总启用子孙栏目；sort=LATEST 按发布时间降序；total 为筛选范围内累计公开内容数")
     public Result<PageResult<PublicContentListVO>> contents(
             @Parameter(description = "栏目编码", example = "exhibition-news") @PathVariable String code,
-            @Valid @ModelAttribute PublicContentPageQuery query) {
+            @Valid @ParameterObject @ModelAttribute PublicContentPageQuery query) {
         return Result.success(service.pageByCategory(code, query));
     }
 }

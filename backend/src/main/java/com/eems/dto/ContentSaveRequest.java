@@ -10,7 +10,7 @@ import jakarta.validation.constraints.Size;
 public class ContentSaveRequest {
     @NotNull
     @Min(value = 1, message = "categoryId must be greater than 0")
-    @Schema(description = "所属栏目 ID", example = "1")
+    @Schema(description = "所属栏目 ID，必须选择当前站点没有未删除子栏目的末级栏目", example = "2")
     private Long categoryId;
     @Min(value = 1, message = "exhibitionId must be greater than 0")
     @Schema(description = "关联展会 ID", nullable = true, example = "1")

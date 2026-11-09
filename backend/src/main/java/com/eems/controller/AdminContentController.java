@@ -46,14 +46,14 @@ public class AdminContentController {
     }
 
     @PostMapping
-    @Operation(summary = "新增栏目内容")
+    @Operation(summary = "新增栏目内容", description = "所属栏目必须没有未删除的子栏目，否则返回 CONTENT_CATEGORY_HAS_CHILDREN")
     public Result<ContentVO> create(@Valid @RequestBody ContentSaveRequest request,
                                     Authentication authentication) {
         return Result.success(service.create(request, authentication.getName()));
     }
 
     @PutMapping("/{id}")
-    @Operation(summary = "编辑栏目内容")
+    @Operation(summary = "编辑栏目内容", description = "所属栏目必须没有未删除的子栏目；历史内容若属于父栏目，保存时需改选末级栏目")
     public Result<ContentVO> update(@Parameter(description = "内容 ID", example = "1") @PathVariable Long id,
                                     @Valid @RequestBody ContentSaveRequest request,
                                     Authentication authentication) {

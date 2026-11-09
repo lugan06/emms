@@ -75,6 +75,13 @@ export interface PublicExhibition {
   isCurrent: boolean
 }
 
+export interface PublicHomeSection {
+  categoryId: number
+  categoryCode: string
+  categoryName: string
+  items: PublicContent[]
+}
+
 export interface PublicHome {
   site: PublicSite
   company: PublicCompany
@@ -85,6 +92,7 @@ export interface PublicHome {
   exhibitionNews: PublicContent[]
   industryNews: PublicContent[]
   exhibitorNews: PublicContent[]
+  overviewSections?: PublicHomeSection[]
 }
 
 export interface PublicCategory {
@@ -114,6 +122,8 @@ export interface PublicExhibitionQuery {
 
 export interface PublicContentQuery {
   keyword?: string
+  includeChildren?: boolean
+  sort?: 'DEFAULT' | 'LATEST'
   page?: number
   pageSize?: number
 }

@@ -69,6 +69,45 @@ class PublicContentServiceImplTest {
     }
 
     @Test
+    void subtreePageShouldUseLatestOrderAndKeepActualCategoryMetadata() {
+        CmsCategory root = category(1L, 0L, "新闻中心", "news", 1, 1);
+        CmsCategory child = category(2L, 1L, "自定义新闻", "custom-news", 1, 0);
+        CmsCategory grandchild = category(3L, 2L, "孙栏目", "nested-news", 1, 1);
+        CmsCategory unrelated = category(4L, 0L, "其他栏目", "other", 1, 1);
+        CmsCategory orphan = category(6L, 5L, "禁用父栏目的子栏目", "hidden", 1, 1);
+        when(categoryMapper.selectOne(any())).thenReturn(root);
+        when(categoryMapper.selectList(any())).thenReturn(List.of(root, child, grandchild, unrelated, orphan));
+        when(contentMapper.selectPage(any(), any())).thenAnswer(invocation -> {
+            LambdaQueryWrapper<CmsContent> wrapper = invocation.getArgument(1);
+            String sql = wrapper.getSqlSegment();
+            assertTrue(sql.contains("category_id IN"));
+            assertTrue(sql.contains("published_at DESC,id DESC"));
+            assertFalse(sql.contains("is_top"));
+            assertFalse(sql.contains("is_recommend"));
+            assertFalse(sql.contains("sort_order"));
+            assertFalse(sql.contains("exhibition_id"));
+            assertTrue(wrapper.getParamNameValuePairs().containsValue(1L));
+            assertTrue(wrapper.getParamNameValuePairs().containsValue(2L));
+            assertTrue(wrapper.getParamNameValuePairs().containsValue(3L));
+            assertFalse(wrapper.getParamNameValuePairs().containsValue(4L));
+            assertFalse(wrapper.getParamNameValuePairs().containsValue(6L));
+            Page<CmsContent> page = new Page<>(1, 10);
+            page.setRecords(List.of(content(10L, 3L, "PUBLISHED")));
+            page.setTotal(1);
+            return page;
+        });
+        PublicContentPageQuery query = new PublicContentPageQuery();
+        query.setIncludeChildren(true);
+        query.setSort("LATEST");
+
+        var result = service.pageByCategory("news", query);
+
+        assertEquals(1, result.getTotal());
+        assertEquals("nested-news", result.getRecords().get(0).categoryCode());
+        assertEquals("孙栏目", result.getRecords().get(0).categoryName());
+    }
+
+    @Test
     void detailShouldRejectUnavailableContent() {
         when(contentMapper.selectOne(any())).thenReturn(null);
 
@@ -193,6 +232,39 @@ class PublicContentServiceImplTest {
 
         assertEquals(102L, result.get(0).id());
         assertEquals(null, result.get(0).body());
+    }
+
+    @Test
+    void overviewShouldIncludeCustomAndNestedContentWithoutLimitingItsSize() {
+        CmsCategory root = category(1L, 0L, "展会概览", "exhibition-overview", 1, 1);
+        CmsCategory price = category(20L, 1L, "展位定价", "exhibition-price", 1, 0);
+        CmsCategory nested = category(21L, 20L, "自定义孙栏目", "custom", 1, 1);
+        CmsCategory link = category(22L, 1L, "链接", "link", 1, 1);
+        link.setModelCode("LINK");
+        when(categoryMapper.selectOne(any())).thenReturn(root);
+        when(categoryMapper.selectList(any())).thenReturn(List.of(root, price, nested, link));
+        CmsContent content = content(99L, 21L, "PUBLISHED");
+        content.setBody("<p>完整正文</p><script>alert(1)</script>");
+        when(contentMapper.selectList(any())).thenAnswer(invocation -> {
+            LambdaQueryWrapper<CmsContent> wrapper = invocation.getArgument(0);
+            String sql = wrapper.getSqlSegment();
+            assertTrue(sql.contains("category_id IN"));
+            assertTrue(sql.contains("exhibition_id ="));
+            assertTrue(sql.contains("exhibition_id IS NULL"));
+            assertFalse(sql.contains("LIMIT"));
+            assertFalse(wrapper.getParamNameValuePairs().containsValue(22L));
+            return List.of(content);
+        });
+        var result = service.overviewSections(8L);
+        assertEquals(1, result.size());
+        assertEquals("custom", result.get(0).categoryCode());
+        assertEquals("<p>完整正文</p>", result.get(0).items().get(0).body());
+    }
+
+    @Test
+    void overviewWithoutCurrentExhibitionShouldNotQueryContent() {
+        assertEquals(List.of(), service.overviewSections(null));
+        verify(contentMapper, never()).selectList(any());
     }
 
     private CmsCategory category(Long id, Long parentId, String name, String code, int enabled, int showInNav) {

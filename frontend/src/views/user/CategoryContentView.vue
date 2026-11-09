@@ -55,9 +55,12 @@ import PublicCoverImage from '@/components/public/PublicCoverImage.vue'
 import PublicPageHeading from '@/components/public/PublicPageHeading.vue'
 import type { PageResult, PublicContentList } from '@/types/public'
 import { formatDateTime } from '@/utils/format'
+import { usePublicStore } from '@/stores/public'
+import type { PublicCategory } from '@/types/public'
 
 const route = useRoute()
 const router = useRouter()
+const publicStore = usePublicStore()
 const page = ref(1)
 const pageSize = 10
 const loading = ref(true)
@@ -65,7 +68,17 @@ const error = ref(false)
 const result = ref<PageResult<PublicContentList>>({ records: [], total: 0, page: 1, pageSize })
 
 const categoryCode = computed(() => String(route.params.code || ''))
-const categoryTitle = computed(() => result.value.records[0]?.categoryName || categoryCode.value || '栏目内容')
+const includesChildren = computed(() => categoryCode.value === 'news' || route.query.includeChildren === 'true')
+const latestFirst = computed(() => categoryCode.value === 'news' || route.query.sort === 'LATEST')
+function findCategory(categories: PublicCategory[], code: string): PublicCategory | undefined {
+  for (const category of categories) {
+    if (category.code === code) return category
+    const child = findCategory(category.children, code)
+    if (child) return child
+  }
+}
+const categoryTitle = computed(() => findCategory(publicStore.categories, categoryCode.value)?.name
+  || (categoryCode.value === 'news' ? '新闻中心' : result.value.records[0]?.categoryName || categoryCode.value || '栏目内容'))
 
 async function loadContents(): Promise<void> {
   if (!categoryCode.value) {
@@ -80,6 +93,8 @@ async function loadContents(): Promise<void> {
     result.value = await publicApi.categoryContents(categoryCode.value, {
       page: page.value,
       pageSize,
+      ...(includesChildren.value ? { includeChildren: true } : {}),
+      ...(latestFirst.value ? { sort: 'LATEST' as const } : {}),
     })
   } catch {
     error.value = true
@@ -92,7 +107,7 @@ function openContent(id: number): void {
   void router.push({ name: 'public-content-detail', params: { id } })
 }
 
-watch(categoryCode, () => {
+watch([categoryCode, includesChildren, latestFirst], () => {
   page.value = 1
   void loadContents()
 }, { immediate: true })

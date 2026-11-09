@@ -48,6 +48,7 @@ class PublicHomeServiceImplTest {
 
         assertEquals(site, result.site());
         assertEquals(exhibition, result.currentExhibition());
+        verify(publicContentService).overviewSections(8L);
         verify(publicContentService).topByCategory("exhibition-intro", 8L, 6);
         verify(publicContentService).topByCategory("events", 8L, 6);
         verify(publicContentService).topByCategory("exhibition-scope", 8L, 6);
@@ -66,6 +67,7 @@ class PublicHomeServiceImplTest {
         assertEquals(List.of(), result.samePeriodActivities());
         assertEquals(List.of(), result.exhibitionScope());
         assertEquals(List.of(), result.exhibitionNews());
+        assertEquals(List.of(), result.overviewSections());
         verify(exhibitionService, never()).publicGet(org.mockito.ArgumentMatchers.any());
         verify(publicContentService, never()).topByCategory(eq("exhibition-intro"), isNull(), eq(6));
         verify(publicContentService).topByCategory("industry-news", null, 6);

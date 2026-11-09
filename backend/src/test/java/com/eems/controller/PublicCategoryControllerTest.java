@@ -16,6 +16,7 @@ import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -54,5 +55,16 @@ class PublicCategoryControllerTest {
                 .andExpect(status().isOk());
 
         verify(publicContentService).pageByCategory(eq("news"), any());
+    }
+
+    @Test
+    void subtreeAndLatestParametersShouldBindAndInvalidSortShouldBeRejected() throws Exception {
+        mockMvc.perform(get("/api/public/categories/news/contents")
+                        .param("includeChildren", "true").param("sort", "LATEST"))
+                .andExpect(status().isOk());
+        verify(publicContentService).pageByCategory(eq("news"), argThat(query -> query.isIncludeChildren()
+                && "LATEST".equals(query.getSort())));
+        mockMvc.perform(get("/api/public/categories/news/contents").param("sort", "invalid"))
+                .andExpect(status().isBadRequest());
     }
 }

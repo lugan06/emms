@@ -202,6 +202,19 @@ class ContentServiceImplTest {
         verify(mapper, never()).updateById(any(CmsContent.class));
     }
 
+    @Test
+    void createAndUpdateShouldRejectParentCategoryBeforeWritingContent() {
+        when(categoryMapper.selectById(2L)).thenReturn(category(2L));
+        when(categoryMapper.selectCount(any())).thenReturn(1L);
+
+        assertEquals("CONTENT_CATEGORY_HAS_CHILDREN", assertThrows(BusinessException.class,
+                () -> service.create(request(), "admin")).getCode());
+        assertEquals("CONTENT_CATEGORY_HAS_CHILDREN", assertThrows(BusinessException.class,
+                () -> service.update(10L, request(), "admin")).getCode());
+        verify(mapper, never()).insert(any(CmsContent.class));
+        verify(mapper, never()).updateById(any(CmsContent.class));
+    }
+
     private ContentSaveRequest request() {
         ContentSaveRequest request = new ContentSaveRequest();
         request.setCategoryId(2L);

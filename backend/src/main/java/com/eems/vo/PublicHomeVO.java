@@ -14,5 +14,6 @@ public record PublicHomeVO(
         @Schema(description = "参展范围，含安全过滤后的富文本正文") List<PublicContentVO> exhibitionScope,
         @Schema(description = "展会动态，含安全过滤后的富文本正文") List<PublicContentVO> exhibitionNews,
         @Schema(description = "行业新闻，含安全过滤后的富文本正文") List<PublicContentVO> industryNews,
-        @Schema(description = "展商新闻，含安全过滤后的富文本正文") List<PublicContentVO> exhibitorNews) {
+        @Schema(description = "展商新闻，含安全过滤后的富文本正文") List<PublicContentVO> exhibitorNews,
+        @Schema(description = "展会概览下启用的内容子栏目，按栏目排序，包含全部公开内容；无内容及链接栏目不展示") List<PublicHomeSectionVO> overviewSections) {
 }

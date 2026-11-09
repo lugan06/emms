@@ -1,32 +1,31 @@
 <template>
-  <section v-if="items.length" class="news-marquee" aria-label="新闻资讯">
+  <section v-if="items.length || error" class="news-marquee" aria-label="新闻资讯">
     <div v-reveal class="news-heading">
-      <div>
+      <RouterLink class="news-title-link" :to="newsRoute">
         <p class="news-eyebrow">LATEST NEWS</p>
         <h2>新闻资讯</h2>
-      </div>
-      <span>{{ items.length }} 条动态</span>
+      </RouterLink>
+      <span v-if="!error">累计 {{ total }} 条新闻</span>
     </div>
 
-    <div class="news-window">
-      <div class="news-track">
+    <div v-if="error" class="news-error" role="status">新闻暂时无法加载 <el-button link type="primary" @click="load">重试</el-button></div>
+    <div v-else class="news-window">
+      <div class="news-track" :style="{ '--news-duration': `${marqueeItems.length * 18}s` }">
         <div
           v-for="groupIndex in [0, 1]"
           :key="groupIndex"
           class="news-group"
           :aria-hidden="groupIndex === 1 ? 'true' : undefined"
-          :inert="groupIndex === 1"
         >
           <div
             v-for="(item, index) in marqueeItems"
             :key="`${item.id}-${groupIndex}-${index}`"
-            v-reveal="(index % 4) * 60"
             class="news-card-reveal"
           >
             <RouterLink
               class="news-card"
               :to="`/content/${item.id}`"
-              :tabindex="groupIndex === 1 ? -1 : undefined"
+              :tabindex="groupIndex === 1 || index >= items.length ? -1 : undefined"
             >
               <PublicCoverImage :src="item.coverUrl" :alt="item.title" class="news-cover" />
               <div class="news-card-copy">
@@ -46,20 +45,38 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted, onBeforeUnmount, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 
-import type { PublicContent } from '@/types/public'
+import type { PublicContentList } from '@/types/public'
+import { loadAllNews, newsRoute } from '@/utils/news'
 import { vReveal } from '@/directives/reveal'
 import { formatDateTime } from '@/utils/format'
 import PublicCoverImage from './PublicCoverImage.vue'
 
-const props = defineProps<{ items: PublicContent[] }>()
+const items = ref<PublicContentList[]>([])
+const total = ref(0)
+const error = ref(false)
+let disposed = false
+
+async function load(): Promise<void> {
+  error.value = false
+  try {
+    const result = await loadAllNews()
+    if (disposed) return
+    items.value = result.items
+    total.value = result.total
+  } catch {
+    if (!disposed) error.value = true
+  }
+}
+onMounted(() => { void load() })
+onBeforeUnmount(() => { disposed = true })
 
 const marqueeItems = computed(() => {
-  const repeatedItems = [...props.items]
+  const repeatedItems = [...items.value]
   while (repeatedItems.length > 0 && repeatedItems.length < 4) {
-    repeatedItems.push(...props.items.slice(0, 4 - repeatedItems.length))
+    repeatedItems.push(...items.value.slice(0, 4 - repeatedItems.length))
   }
   return repeatedItems
 })
@@ -70,6 +87,11 @@ const marqueeItems = computed(() => {
   min-width: 0;
   padding: 24px 0 8px;
 }
+
+.news-title-link { text-decoration: none; }
+.news-title-link:hover h2 { color: #2563eb; }
+.news-title-link:focus-visible { outline: 2px solid #2563eb; outline-offset: 4px; }
+.news-error { color: #6b7280; font-size: 14px; }
 
 .news-heading {
   display: flex;
@@ -99,6 +121,7 @@ const marqueeItems = computed(() => {
 
 .news-window {
   overflow: hidden;
+  padding: 8px 0 16px;
   -webkit-mask-image: linear-gradient(to right, transparent, #000 5%, #000 95%, transparent);
   mask-image: linear-gradient(to right, transparent, #000 5%, #000 95%, transparent);
 }
@@ -110,7 +133,7 @@ const marqueeItems = computed(() => {
 }
 
 .news-track {
-  animation: news-marquee 42s linear infinite;
+  animation: news-marquee var(--news-duration, 72s) linear infinite;
 }
 
 .news-group {
@@ -127,6 +150,8 @@ const marqueeItems = computed(() => {
   display: flex;
   width: 360px;
   min-height: 176px;
+  box-sizing: border-box;
+  cursor: pointer;
   padding: 14px;
   flex: 0 0 360px;
   align-items: stretch;
@@ -206,8 +231,8 @@ const marqueeItems = computed(() => {
   -webkit-line-clamp: 2;
 }
 
-.news-window:hover .news-track,
-.news-window:focus-within .news-track {
+.news-track:has(.news-card:hover),
+.news-track:has(.news-card:focus-visible) {
   animation-play-state: paused;
 }
 

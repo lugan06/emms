@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { AdminCategory } from '@/types/admin'
-import { createCategoryForm, createContentForm, forbiddenParentIds, validateCategoryParent, validateContentForm } from './cms'
+import { contentCategoryOptions, createCategoryForm, createContentForm, forbiddenParentIds, validateCategoryParent, validateContentCategory, validateContentForm } from './cms'
 
 function node(id: number, parentId: number, children: AdminCategory[] = []): AdminCategory {
   return { ...createCategoryForm(parentId), id, name: `栏目${id}`, createdAt: '', updatedAt: '', children }
@@ -20,6 +20,23 @@ describe('category cycle prevention', () => {
   })
 })
 describe('content form validation', () => {
+  const tree = [node(1, 0, [node(2, 1, [node(3, 2)])]), node(4, 0)]
+  it('disables every branch without disabling its leaves or changing the shared tree', () => {
+    const options = contentCategoryOptions(tree)
+    expect(options[0].disabled).toBe(true)
+    expect(options[0].children[0].disabled).toBe(true)
+    expect(options[0].children[0].children[0].disabled).toBe(false)
+    expect(options[1].disabled).toBe(false)
+    expect(tree[0]).not.toHaveProperty('disabled')
+  })
+  it('rejects parents and missing categories while allowing nested and top-level leaves', () => {
+    for (const categoryId of [1, 2, 99, null]) expect(validateContentCategory(tree, categoryId)).not.toBe(true)
+    for (const categoryId of [3, 4]) expect(validateContentCategory(tree, categoryId)).toBe(true)
+    const form = { ...createContentForm(), categoryId: 2, title: '已有父栏目内容' }
+    expect(validateContentForm(form, tree)).toContain('该栏目有子栏目')
+    form.categoryId = 3
+    expect(validateContentForm(form, tree)).toBe(true)
+  })
   it('requires category and non-whitespace title', () => {
     const form = createContentForm()
     expect(validateContentForm(form)).toBe('请选择所属栏目')

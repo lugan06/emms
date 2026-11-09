@@ -42,6 +42,10 @@ pnpm-debug.log*
 **/.vscode/
 *.iml
 
+# Local agent instructions and documentation
+/AGENTS.md
+/doc/
+
 # Operating system files
 .DS_Store
 Thumbs.db

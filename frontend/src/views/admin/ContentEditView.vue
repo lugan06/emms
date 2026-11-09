@@ -6,9 +6,10 @@
     <el-form v-else ref="formRef" :model="form" :rules="rules" label-position="top" :disabled="saving" @submit.prevent="save">
       <section class="cms-panel">
         <h2 class="cms-section-title">基础信息</h2>
+        <el-alert v-if="selectedCategoryError" :title="selectedCategoryError" type="warning" show-icon :closable="false" />
         <div class="cms-form-grid">
           <el-form-item label="所属栏目" prop="categoryId">
-            <el-tree-select v-model="form.categoryId" :data="categories" :props="{ label: 'name', value: 'id', children: 'children' }" node-key="id" check-strictly filterable placeholder="请选择所属栏目" class="full-width" />
+            <el-tree-select v-model="form.categoryId" :data="categoryOptions" :props="{ label: 'name', value: 'id', children: 'children', disabled: 'disabled' }" node-key="id" filterable placeholder="请选择没有子栏目的末级栏目" class="full-width" />
           </el-form-item>
           <el-form-item label="关联展会" prop="exhibitionId"><el-select v-model="form.exhibitionId" filterable clearable placeholder="不关联展会" class="full-width"><el-option v-for="item in exhibitions" :key="item.id" :label="item.title" :value="item.id" /></el-select></el-form-item>
           <el-form-item label="标题" prop="title"><el-input v-model="form.title" maxlength="200" show-word-limit /></el-form-item>
@@ -39,7 +40,7 @@ import { cmsApi } from '@/api/cms'
 import CoverImageUpload from '@/components/admin/CoverImageUpload.vue'
 import ContentRichEditor from '@/components/admin/ContentRichEditor.vue'
 import type { AdminCategory, AdminExhibition, ContentSaveRequest } from '@/types/admin'
-import { createContentForm, validateContentForm } from '@/utils/cms'
+import { contentCategoryOptions, createContentForm, validateContentCategory, validateContentForm } from '@/utils/cms'
 import { loadExhibitionOptions } from '@/utils/admin-options'
 
 const route = useRoute()
@@ -48,6 +49,12 @@ const editingId = computed(() => route.params.id ? Number(route.params.id) : nul
 const form = reactive(createContentForm())
 const formRef = ref<FormInstance>()
 const categories = ref<AdminCategory[]>([])
+const categoryOptions = computed(() => contentCategoryOptions(categories.value))
+const selectedCategoryError = computed(() => {
+  if (!form.categoryId) return ''
+  const valid = validateContentCategory(categories.value, form.categoryId)
+  return valid === true ? '' : valid
+})
 const exhibitions = ref<AdminExhibition[]>([])
 const loading = ref(true)
 const saving = ref(false)
@@ -55,7 +62,10 @@ const error = ref(false)
 const coverUploading = ref(false)
 const bodyUploading = ref(false)
 const rules: FormRules<ContentSaveRequest> = {
-  categoryId: [{ required: true, type: 'number', min: 1, message: '请选择所属栏目', trigger: 'change' }],
+  categoryId: [{ validator: (_rule, value: number | null, callback) => {
+    const valid = validateContentCategory(categories.value, value)
+    callback(valid === true ? undefined : new Error(valid))
+  }, trigger: 'change' }],
   title: [{ required: true, whitespace: true, message: '请输入内容标题', trigger: 'blur' }],
   sortOrder: [{ required: true, type: 'integer', min: 0, message: '排序值必须为非负整数', trigger: 'change' }],
   extraData: [{ validator: (_rule, value: string | null, callback) => {
@@ -82,7 +92,7 @@ async function loadForm(): Promise<void> {
 async function save(): Promise<void> {
   if (saving.value || coverUploading.value || bodyUploading.value) return
   if (!await formRef.value?.validate().catch(() => false)) return
-  const valid = validateContentForm(form)
+  const valid = validateContentForm(form, categories.value)
   if (valid !== true) { ElMessage.warning(valid); return }
   saving.value = true
   try {

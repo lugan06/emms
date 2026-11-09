@@ -61,7 +61,10 @@ async function mount(component: Component, path = '/') {
   return { store: usePublicStore(pinia), router }
 }
 
-beforeEach(() => { vi.resetAllMocks() })
+beforeEach(() => {
+  vi.resetAllMocks()
+  categoryContents.mockResolvedValue({ records: [], total: 0, page: 1, pageSize: 100 })
+})
 afterEach(() => { app?.unmount(); app = undefined; container?.remove() })
 
 describe('home content sections', () => {
@@ -163,18 +166,15 @@ describe('home content sections', () => {
 
   it.each([
     ['exhibitionNews', '展会动态'], ['industryNews', '行业新闻'], ['exhibitorNews', '展商新闻'],
-  ] as const)('shows %s inside the homepage news marquee', async (field, categoryName) => {
+  ] as const)('ignores limited %s sections when loading the news subtree', async (field, categoryName) => {
     const value = homeFixture()
     const newsItem = { ...item(201, `来自${categoryName}的新闻`), categoryName }
     value[field] = [newsItem]
     home.mockResolvedValue(value)
     await mount(HomeView)
 
-    await vi.waitFor(() => expect(container.querySelector('.news-marquee')).not.toBeNull())
-    expect(container.querySelector('.news-marquee')?.textContent).toContain(newsItem.title)
-    expect(container.querySelector('.news-marquee .news-category')?.textContent).toBe(categoryName)
-    expect(container.querySelector('.news-card')?.getAttribute('href')).toBe('/content/201')
-    expect(container.querySelector('.content-section')).toBeNull()
+    await vi.waitFor(() => expect(categoryContents).toHaveBeenCalledWith('news', { includeChildren: true, sort: 'LATEST', page: 1, pageSize: 100 }))
+    expect(container.querySelector('.news-marquee')).toBeNull()
   })
 
   it('combines news columns into one seamless marquee and duplicates the sequence for looping', async () => {
@@ -182,16 +182,42 @@ describe('home content sections', () => {
     value.exhibitionNews = [{ ...item(201, '展会动态新闻'), categoryName: '展会动态', coverUrl: '/uploads/news/exhibition.jpg' }]
     value.industryNews = [{ ...item(202, '行业新闻'), categoryName: '行业新闻' }]
     value.exhibitorNews = [{ ...item(203, '展商新闻'), categoryName: '展商新闻' }]
+    categoryContents.mockResolvedValue({ records: [
+      { ...value.exhibitionNews[0], publishedAt: '2026-11-01T10:00:00' },
+      { ...value.industryNews[0], publishedAt: '2026-11-03T10:00:00' },
+      { ...value.exhibitorNews[0], publishedAt: '2026-11-02T10:00:00' },
+    ], total: 3, page: 1, pageSize: 100 })
     home.mockResolvedValue(value)
-    await mount(HomeView)
+    const { router } = await mount(HomeView)
 
     await vi.waitFor(() => expect(container.querySelectorAll('.news-marquee .news-card')).toHaveLength(8))
     expect(container.querySelectorAll('.news-marquee .news-group')).toHaveLength(2)
     expect(container.querySelectorAll('.news-marquee .news-group')[1].getAttribute('aria-hidden')).toBe('true')
+    expect(container.querySelector('[inert]')).toBeNull()
+    expect([...container.querySelectorAll('.news-group')[0].querySelectorAll('.news-card')].slice(0, 3).map(card => card.getAttribute('href')))
+      .toEqual(['/content/202', '/content/203', '/content/201'])
+    expect(container.querySelector('.news-heading > span')?.textContent).toBe('累计 3 条新闻')
+    expect(container.querySelector<HTMLElement>('.news-track')?.style.getPropertyValue('--news-duration')).toBe('72s')
     for (const id of [201, 202, 203]) {
       expect(container.querySelector(`.news-card[href="/content/${id}"]`)).not.toBeNull()
     }
-    expect(container.querySelector('.news-card .news-cover img')?.getAttribute('src')).toBe('/uploads/news/exhibition.jpg')
+    expect(container.querySelector('.news-card[href="/content/201"] .news-cover img')?.getAttribute('src')).toBe('/uploads/news/exhibition.jpg')
+    container.querySelectorAll('.news-group')[1].querySelector<HTMLAnchorElement>('.news-card')!.click()
+    await vi.waitFor(() => expect(router.currentRoute.value.path).toBe('/content/202'))
+  })
+
+  it('opens the full news list from its heading and retries a failed feed', async () => {
+    home.mockResolvedValue(homeFixture())
+    categoryContents.mockRejectedValueOnce(new Error('offline'))
+      .mockResolvedValueOnce({ records: [item(205, '恢复的新闻')], total: 1 })
+    const { router } = await mount(HomeView)
+    await vi.waitFor(() => expect(container.querySelector('.news-error')).not.toBeNull())
+    container.querySelector<HTMLButtonElement>('.news-error button')!.click()
+    await vi.waitFor(() => expect(container.querySelector('.news-card')).not.toBeNull())
+    expect(container.querySelector('.news-heading > span')?.textContent).toBe('累计 1 条新闻')
+    container.querySelector<HTMLAnchorElement>('.news-title-link')!.click()
+    await vi.waitFor(() => expect(router.currentRoute.value.path).toBe('/category/news'))
+    expect(router.currentRoute.value.query).toEqual({ includeChildren: 'true', sort: 'LATEST' })
   })
 
   it('keeps the home page available without displaying empty or missing modules', async () => {
@@ -245,6 +271,14 @@ describe('home content sections', () => {
 })
 
 describe('shared public page presentation', () => {
+  it('requests the news subtree in chronological order and keeps the parent heading across pagination', async () => {
+    categoryContents.mockResolvedValue({ records: [{ ...item(55, '最新新闻'), categoryName: '子栏目名称' }], total: 11, page: 1, pageSize: 10 })
+    await mount(CategoryContentView, '/category/news?includeChildren=true&sort=LATEST')
+    await vi.waitFor(() => expect(container.querySelector('.page-heading h1')?.textContent).toBe('新闻中心'))
+    expect(categoryContents).toHaveBeenCalledWith('news', { page: 1, pageSize: 10, includeChildren: true, sort: 'LATEST' })
+    container.querySelector<HTMLButtonElement>('.btn-next')!.click()
+    await vi.waitFor(() => expect(categoryContents).toHaveBeenCalledWith('news', { page: 2, pageSize: 10, includeChildren: true, sort: 'LATEST' }))
+  })
   it('renders article rich text and returns to its category', async () => {
     contentDetail.mockResolvedValue({
       ...item(102, '详情页展会简介'), coverUrl: '/uploads/intro.jpg',
@@ -272,33 +306,6 @@ describe('shared public page presentation', () => {
     await mount(ExhibitionListView, '/exhibitions')
     await vi.waitFor(() => expect(container.textContent).toContain('暂无符合条件的展会'))
     expect(container.querySelector('.page-heading h1')?.textContent).toBe('展会列表')
-  })
-})
-
-describe('contact page', () => {
-  it('supports direct navigation and reads configured company details without a fixed content ID', async () => {
-    company.mockResolvedValue(contactCompany)
-    const { router } = await mount(ContactView, '/contact')
-    expect(router.currentRoute.value.name).toBe('public-contact')
-    await vi.waitFor(() => expect(container.textContent).toContain(contactCompany.companyName))
-    for (const value of ['联系人甲', '13800138000', '021-12345678', 'contact@example.test', '配置的联系地址', '200000']) {
-      expect(container.textContent).toContain(value)
-    }
-    expect(container.textContent).toContain('在线留言')
-    expect(company).toHaveBeenCalledOnce()
-    expect(contentDetail).not.toHaveBeenCalled()
-    expect(home).not.toHaveBeenCalled()
-  })
-
-  it('keeps the guestbook available and retries contact information after a failure', async () => {
-    company.mockRejectedValueOnce(new Error('联系信息暂不可用')).mockResolvedValueOnce(contactCompany)
-    await mount(ContactView, '/contact')
-    await vi.waitFor(() => expect(container.textContent).toContain('联系信息加载失败'))
-    expect(container.textContent).toContain('在线留言')
-    container.querySelector<HTMLButtonElement>('button')!.click()
-    await vi.waitFor(() => expect(container.textContent).toContain(contactCompany.companyName))
-    expect(container.textContent).not.toContain('联系信息加载失败')
-    expect(company).toHaveBeenCalledTimes(2)
   })
 })
 
@@ -341,5 +348,32 @@ describe('public footer', () => {
     expect(container.querySelector('.footer-organizations')).toBeNull()
     expect(container.querySelector('.footer-contacts')).toBeNull()
     expect(container.querySelector('.footer-meta a')).toBeNull()
+  })
+})
+
+describe('contact page', () => {
+  it('supports direct navigation and reads configured company details without a fixed content ID', async () => {
+    company.mockResolvedValue(contactCompany)
+    const { router } = await mount(ContactView, '/contact')
+    expect(router.currentRoute.value.name).toBe('public-contact')
+    await vi.waitFor(() => expect(container.textContent).toContain(contactCompany.companyName))
+    for (const value of ['联系人甲', '13800138000', '021-12345678', 'contact@example.test', '配置的联系地址', '200000']) {
+      expect(container.textContent).toContain(value)
+    }
+    expect(container.textContent).toContain('在线留言')
+    expect(company).toHaveBeenCalledOnce()
+    expect(contentDetail).not.toHaveBeenCalled()
+    expect(home).not.toHaveBeenCalled()
+  })
+
+  it('keeps the guestbook available and retries contact information after a failure', async () => {
+    company.mockRejectedValueOnce(new Error('联系信息暂不可用')).mockResolvedValueOnce(contactCompany)
+    await mount(ContactView, '/contact')
+    await vi.waitFor(() => expect(container.textContent).toContain('联系信息加载失败'))
+    expect(container.textContent).toContain('在线留言')
+    container.querySelector<HTMLButtonElement>('button')!.click()
+    await vi.waitFor(() => expect(container.textContent).toContain(contactCompany.companyName))
+    expect(container.textContent).not.toContain('联系信息加载失败')
+    expect(company).toHaveBeenCalledTimes(2)
   })
 })

@@ -18,6 +18,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.ArgumentMatchers;
 import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -73,7 +74,7 @@ class AdminAuthServiceImplTest {
         assertEquals("SITE_ACCESS_DENIED", assertThrows(SiteResolutionException.class,
                 () -> service.login(login("plain-password"), "127.0.0.1")).getCode());
         verifyNoInteractions(tokens);
-        verify(users, never()).update(any(), any(Wrapper.class));
+        verify(users, never()).update(any(AdminUser.class), ArgumentMatchers.<Wrapper<AdminUser>>any());
         verify(logs).failure(eq("AUTH"), eq("admin"), eq("登录"), any(), any(), any(), eq("{}"), eq("SITE_ACCESS_DENIED"));
     }
 
@@ -124,9 +125,9 @@ class AdminAuthServiceImplTest {
         when(users.selectOne(any())).thenReturn(user("SUPER_ADMIN"));
         when(passwords.matches("old", "old-hash")).thenReturn(true);
         when(passwords.encode("new-password")).thenReturn("new-hash");
-        when(users.update(isNull(), any(Wrapper.class))).thenReturn(1);
+        when(users.update(isNull(), ArgumentMatchers.<Wrapper<AdminUser>>any())).thenReturn(1);
         service.changePassword("admin", new AdminPasswordChangeRequest("old", "new-password"));
-        ArgumentCaptor<Wrapper<AdminUser>> captor = ArgumentCaptor.forClass(Wrapper.class);
+        ArgumentCaptor<Wrapper<AdminUser>> captor = ArgumentCaptor.captor();
         verify(users).update(isNull(), captor.capture());
         var update = (LambdaUpdateWrapper<AdminUser>) captor.getValue();
         String where = update.getSqlSegment();
@@ -158,7 +159,7 @@ class AdminAuthServiceImplTest {
         assertEquals("INVALID_PASSWORD", assertThrows(BusinessException.class,
                 () -> service.changePassword("admin", new AdminPasswordChangeRequest("wrong", "new-password"))).getCode());
         verifyNoInteractions(tokens);
-        verify(users, never()).update(any(), any(Wrapper.class));
+        verify(users, never()).update(any(AdminUser.class), ArgumentMatchers.<Wrapper<AdminUser>>any());
         verify(passwords, never()).encode(any());
     }
 
@@ -170,7 +171,7 @@ class AdminAuthServiceImplTest {
     private void setupSuccessfulCredentials(String role) {
         setupCredentials(role);
         when(sites.requireSite(2L)).thenReturn(new SiteResolver.ResolvedSite(2L, "ENABLED"));
-        when(users.update(isNull(), any(Wrapper.class))).thenReturn(1);
+        when(users.update(isNull(), ArgumentMatchers.<Wrapper<AdminUser>>any())).thenReturn(1);
     }
 
     private AdminUser user(String role) {

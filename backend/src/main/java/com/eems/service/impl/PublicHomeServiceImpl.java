@@ -45,7 +45,8 @@ public class PublicHomeServiceImpl implements PublicHomeService {
                 current(visibleExhibitionId, "exhibition-scope"),
                 current(visibleExhibitionId, "exhibition-news"),
                 publicContentService.topByCategory("industry-news", null, SECTION_LIMIT),
-                publicContentService.topByCategory("exhibitor-news", null, SECTION_LIMIT));
+                publicContentService.topByCategory("exhibitor-news", null, SECTION_LIMIT),
+                publicContentService.overviewSections(visibleExhibitionId));
     }
 
     private List<PublicContentVO> current(Long exhibitionId, String categoryCode) {

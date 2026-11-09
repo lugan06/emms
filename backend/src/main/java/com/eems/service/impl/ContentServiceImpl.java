@@ -168,6 +168,11 @@ public class ContentServiceImpl implements ContentService {
         if (category == null || !siteId.equals(category.getSiteId())) {
             throw new BusinessException("CATEGORY_NOT_FOUND", "栏目不存在或已删除");
         }
+        if (categoryMapper.selectCount(new LambdaQueryWrapper<CmsCategory>()
+                .eq(CmsCategory::getSiteId, siteId)
+                .eq(CmsCategory::getParentId, category.getId())) > 0) {
+            throw new BusinessException("CONTENT_CATEGORY_HAS_CHILDREN", "该栏目有子栏目，请选择没有子栏目的末级栏目");
+        }
         if (request.getExhibitionId() != null) {
             Exhibition exhibition = exhibitionMapper.selectById(request.getExhibitionId());
             if (exhibition == null || !siteId.equals(exhibition.getSiteId())) {

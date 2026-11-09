@@ -18,13 +18,13 @@
       <div class="content-sections">
         <PublicContentSection
           v-for="section in contentSections"
-          :key="section.title"
+          :key="section.code"
           :eyebrow="section.eyebrow"
           :title="section.title"
           :items="section.items"
         />
       </div>
-      <PublicNewsMarquee :items="newsItems" />
+      <PublicNewsMarquee />
     </template>
   </div>
 </template>
@@ -39,7 +39,7 @@ import PublicNewsMarquee from '@/components/public/PublicNewsMarquee.vue'
 import { publicApi } from '@/api/public'
 import { vReveal } from '@/directives/reveal'
 import { usePublicStore } from '@/stores/public'
-import type { PublicContent, PublicHome } from '@/types/public'
+import type { PublicHome } from '@/types/public'
 
 const publicStore = usePublicStore()
 const home = ref<PublicHome | null>(null)
@@ -49,20 +49,16 @@ const error = ref(false)
 const contentSections = computed(() => {
   if (!home.value) return []
   const value = home.value
-  return [
-    { eyebrow: 'ABOUT THE EXHIBITION', title: '展会简介', items: value.exhibitionIntro },
-    { eyebrow: 'IN PARALLEL', title: '同期活动', items: value.samePeriodActivities },
-    { eyebrow: 'EXHIBITOR PROFILE', title: '参展范围', items: value.exhibitionScope },
-  ].filter(section => section.items.length > 0)
-})
-
-const newsItems = computed<PublicContent[]>(() => {
-  if (!home.value) return []
-  return [
-    ...home.value.exhibitionNews,
-    ...home.value.industryNews,
-    ...home.value.exhibitorNews,
+  const overview = value.overviewSections?.map(section => ({
+    code: section.categoryCode, eyebrow: 'EXHIBITION OVERVIEW', title: section.categoryName, items: section.items,
+  })) ?? [
+    { code: 'exhibition-intro', eyebrow: 'ABOUT THE EXHIBITION', title: '展会简介', items: value.exhibitionIntro },
+    { code: 'exhibition-scope', eyebrow: 'EXHIBITOR PROFILE', title: '参展范围', items: value.exhibitionScope },
   ]
+  return [
+    ...overview,
+    { code: 'events', eyebrow: 'IN PARALLEL', title: '同期活动', items: value.samePeriodActivities },
+  ].filter(section => section.items.length > 0)
 })
 
 async function loadHome(): Promise<void> {

@@ -70,4 +70,13 @@ describe('publicApi', () => {
 
     expect(get).toHaveBeenCalledWith('/api/public/contents/10')
   })
+
+  it('passes subtree and latest ordering parameters to the public category endpoint', async () => {
+    const { publicApi } = await import('./public')
+    get.mockResolvedValueOnce({ records: [], total: 0 })
+    await publicApi.categoryContents('news', { page: 2, pageSize: 100, includeChildren: true, sort: 'LATEST' })
+    expect(get).toHaveBeenCalledWith('/api/public/categories/news/contents', {
+      params: { page: 2, pageSize: 100, includeChildren: true, sort: 'LATEST' },
+    })
+  })
 })

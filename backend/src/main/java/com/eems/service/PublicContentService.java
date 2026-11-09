@@ -5,6 +5,7 @@ import com.eems.dto.PublicContentPageQuery;
 import com.eems.vo.PublicCategoryVO;
 import com.eems.vo.PublicContentListVO;
 import com.eems.vo.PublicContentVO;
+import com.eems.vo.PublicHomeSectionVO;
 
 import java.util.List;
 
@@ -13,4 +14,5 @@ public interface PublicContentService {
     PageResult<PublicContentListVO> pageByCategory(String code, PublicContentPageQuery query);
     PublicContentVO get(Long id);
     List<PublicContentVO> topByCategory(String code, Long exhibitionId, int limit);
+    List<PublicHomeSectionVO> overviewSections(Long exhibitionId);
 }
